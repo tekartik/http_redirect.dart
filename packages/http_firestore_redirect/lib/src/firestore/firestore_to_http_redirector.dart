@@ -8,7 +8,7 @@ import 'package:path/path.dart' as _path;
 import 'package:tekartik_firebase/firebase.dart';
 import 'package:tekartik_firebase_firestore/firestore.dart';
 import 'package:tekartik_http/http.dart';
-import 'package:tekartik_http_firestore_redirect/src/firestore/firestore_impl.dart';
+import 'package:tekartik_http_firestore_redirect/src/firestore/firestore_http_client.dart';
 
 class Redirector {
   // Find by name if any

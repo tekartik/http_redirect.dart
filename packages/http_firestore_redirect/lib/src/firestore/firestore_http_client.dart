@@ -97,26 +97,26 @@ class FirestoreHttpClient extends Object implements http.Client {
   }
 
   @override
-  Future<ResponseFirestore> get(url, {Map<String, String>? headers}) =>
+  Future<ResponseFirestore> get(Uri url, {Map<String, String>? headers}) =>
       curl(Request(common.httpMethodGet, url, headers: headers));
 
   @override
-  Future<ResponseFirestore> post(url,
+  Future<ResponseFirestore> post(Uri url,
           {Map<String, String>? headers, body, Encoding? encoding}) =>
       curl(Request(common.httpMethodPost, url, headers: headers, body: body));
 
   @override
-  Future<ResponseFirestore> delete(url,
+  Future<ResponseFirestore> delete(Uri url,
           {Map<String, String>? headers, body, Encoding? encoding}) =>
       curl(Request(common.httpMethodDelete, url, headers: headers, body: body));
 
   @override
-  Future<ResponseFirestore> patch(url,
+  Future<ResponseFirestore> patch(Uri url,
           {Map<String, String>? headers, body, Encoding? encoding}) =>
       curl(Request(common.httpMethodPatch, url, headers: headers, body: body));
 
   @override
-  Future<ResponseFirestore> put(url,
+  Future<ResponseFirestore> put(Uri url,
           {Map<String, String>? headers, body, Encoding? encoding}) =>
       curl(Request(common.httpMethodPut, url, headers: headers, body: body));
   Future<ResponseFirestore> curl(Request request) async {
