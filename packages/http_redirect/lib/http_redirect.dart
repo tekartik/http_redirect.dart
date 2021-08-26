@@ -24,17 +24,30 @@ Future proxyHttpRequest(Options options, HttpRequest request, String? baseUrl,
       path = path.substring(1);
     }
 
-    print('baseUrl: $baseUrl, path: $path, headers: ${request.headers}');
+    // print('baseUrl: $baseUrl, path: $path, headers: ${request.headers}');
     String? url;
     if (path == '' || path == '.' || path == '/') {
       url = baseUrl;
     } else {
       url = _path.url.join(baseUrl!, path);
-      print('baseUrl: $baseUrl, path: $path, url $url');
+      // print('baseUrl: $baseUrl, path: $path, url $url');
     }
     uri = Uri.parse(url!);
   }
-  print('calling ${request.method} $uri');
+
+  if (options.forwardArguments) {
+    var requestUri = request.uri; //
+    // Fix arguments
+    uri = uri.replace(
+        queryParameters: <String, Object?>{}
+          ..addAll(uri.queryParameters)
+          ..addAll(requestUri.queryParameters));
+    // uri.queryParameters
+  }
+
+  if (debugHttpRedirectServer) {
+    print('calling ${request.method} $uri');
+  }
 
   Map<String, String>? headers = <String, String>{};
 
@@ -72,7 +85,7 @@ Future proxyHttpRequest(Options options, HttpRequest request, String? baseUrl,
       _set();
     }
   });
-  print('headers: $headers');
+  // print('headers: $headers');
 
   var bytes = <int>[];
   for (var list in await request.toList()) {
@@ -101,8 +114,8 @@ Future proxyHttpRequest(Options options, HttpRequest request, String? baseUrl,
   final r = request.response;
 
   r.statusCode = innerResponse.statusCode;
-  print('response: ${r.statusCode}');
-  print('respons headers: ${innerResponse.headers}');
+  // print('response: ${r.statusCode}');
+  // print('response headers: ${innerResponse.headers}');
 
   innerHeaders.forEach((key, values) {
     final lowercaseKey = key.toLowerCase();
@@ -116,19 +129,22 @@ Future proxyHttpRequest(Options options, HttpRequest request, String? baseUrl,
   });
   // r.contentLength = rs.contentLength == null ? -1 : rs.contentLength;
   // r.headers.contentType = ContentType.parse(innerResponse.headers[httpHeaderContentType]); //.contentType;
-  print('fwd response headers: ${r.headers}');
+  // print('fwd response headers: ${r.headers}');
   r.headers.set(redirectUrlHeader, uri.toString());
 
+  // devPrint('out $innerBody');
   try {
     if (innerBody.isNotEmpty) {
-      await r.addStream(Stream.fromIterable([innerBody]));
+      r.add(innerBody);
     }
   } catch (e, st) {
+    print('Error writing body $e');
     if (debugHttpRedirectServer) {
       print(st);
     }
     rethrow;
   }
+  // devPrint('flush');
   try {
     await r.flush();
   } catch (e, st) {
@@ -138,6 +154,7 @@ Future proxyHttpRequest(Options options, HttpRequest request, String? baseUrl,
     }
   }
 
+  // devPrint('closing');
   try {
     await r.close();
   } catch (e, st) {
@@ -146,12 +163,13 @@ Future proxyHttpRequest(Options options, HttpRequest request, String? baseUrl,
       print(st);
     }
   }
-  print('done');
+  // devPrint('done');
 }
 
 class Options {
-  var handleCors = false;
-  var forwardHeaders = false;
+  var handleCors = true;
+  var forwardHeaders = true;
+  var forwardArguments = true;
   int? port;
   Object? host;
 

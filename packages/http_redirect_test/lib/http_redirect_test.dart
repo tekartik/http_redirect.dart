@@ -1,15 +1,16 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:path/path.dart';
 import 'package:tekartik_http/http.dart';
 import 'package:tekartik_http/http_memory.dart';
 import 'package:tekartik_http_redirect/http_redirect.dart';
-import 'package:tekartik_http_test/test_server.dart';
+import 'package:tekartik_http_redirect_test/src/echo_server.dart';
 import 'package:test/test.dart';
 
 void main() {
   run(httpFactory: httpFactoryMemory);
-  runNew(httpFactory: httpFactoryMemory);
+  runHttpRedirectTest(httpFactory: httpFactoryMemory);
 }
 
 /*
@@ -19,7 +20,7 @@ void main() {
   run(httpFactory: httpFactory, firestore: firestore);
 }
 */
-void runNew({
+void runHttpRedirectTest({
   required HttpFactory httpFactory,
   HttpFactory? testServerHttpFactory,
 }) {
@@ -35,7 +36,7 @@ void runNew({
       late HttpRedirectServer httpRedirectServer;
       late Uri redirectUri;
       setUpAll(() async {
-        server = await serve(targetServerHttpFactory.server, 0);
+        server = await serveEchoParams(targetServerHttpFactory.server, 0);
         var uri = httpServerGetUri(server);
         client = httpClientFactory.newClient();
         httpRedirectServer = await HttpRedirectServer.startServer(
@@ -89,16 +90,23 @@ void runNew({
         },
       );
 
+      test('path', () async {
+        var response = await httpClientSend(client, httpMethodGet,
+            Uri.parse(url.join(redirectUri.toString(), 'some/path')));
+        expect(response.isSuccessful, isTrue);
+        expect(Uri.parse(response.headers['x-echo-request-uri']!).path,
+            endsWith('/some/path'));
+      });
+
       test('forwardArguments', () async {
         var result = await httpClientRead(
             client, httpMethodGet, Uri.parse('$redirectUri?body=test'));
         expect(result, 'test');
-      }, solo: true);
+      });
 
       test(
         'failure_throw',
         () async {
-          var uri = httpServerGetUri(server);
           try {
             await httpClientSend(client, httpMethodGet,
                 Uri.parse('$redirectUri?statusCode=400&body=test'),

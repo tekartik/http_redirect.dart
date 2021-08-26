@@ -14,11 +14,12 @@ const String logArgName = 'log';
 const String portArgName = 'port';
 const String redirectBaseUrlArgName = 'host';
 const String forwardHeaderFlagName = 'forward-headers';
+const String forwardArgumentsFlagName = 'forward-arguments';
 
 Future main(List<String> arguments) async {
   var parser = ArgParser(allowTrailingOptions: true);
   parser.addFlag(helpArgName, abbr: 'h', help: 'Usage help', negatable: false);
-  parser.addFlag(corsArgName, abbr: 'c', help: 'Handle CORS');
+  parser.addFlag(corsArgName, abbr: 'c', help: 'Handle CORS', defaultsTo: true);
   parser.addMultiOption(corsHeadersArgName,
       abbr: 'o', help: 'CORS headers', defaultsTo: corsDefaultHeaders);
   parser.addOption(logArgName,
@@ -29,6 +30,8 @@ Future main(List<String> arguments) async {
       abbr: 'b', help: 'redirect baseUrl (http[s]://host:[port]/base_path');
   parser.addFlag(forwardHeaderFlagName,
       abbr: 'w', help: 'forward headers', defaultsTo: true);
+  parser.addFlag(forwardArgumentsFlagName,
+      help: 'forward arguments (query parameter)', defaultsTo: true);
 
   var _argsResult = parser.parse(arguments);
 
@@ -37,6 +40,7 @@ Future main(List<String> arguments) async {
   options.corsHeaders = _argsResult[corsHeadersArgName] as List<String>;
   options.baseUrl = _argsResult[redirectBaseUrlArgName] as String?;
   options.forwardHeaders = _argsResult[forwardHeaderFlagName] as bool;
+  options.forwardArguments = _argsResult[forwardArgumentsFlagName] as bool;
 
   final help = _argsResult[helpArgName] as bool;
   if (help) {
