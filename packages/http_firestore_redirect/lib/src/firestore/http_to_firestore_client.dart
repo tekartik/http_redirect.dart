@@ -17,7 +17,7 @@ final String httpClientFactoryFirestoreDefaultName = 'any';
 final String firestoreHttpContextRequestsPartName = 'request';
 final String firestoreHttpContextResponsesPartName = 'response';
 
-var debugHttpToFirestore = devWarning(true); // false
+var debugHttpToFirestore = false; // devWarning(true); // false
 
 class HttpClientFactoryFirestore implements common.HttpClientFactory {
   // FirebaseService _firebaseService;
