@@ -160,7 +160,7 @@ class RedirectorService {
               dataResponse[paramBody] = response.body;
             }
             dataResponse[paramUrl] = url;
-            dataResponse[paramDate] = FieldValue.serverTimestamp;
+            dataResponse[paramTimestamp] = FieldValue.serverTimestamp;
           }
           print('redirector response $responsePath $dataResponse');
           listener?.info('response', dataResponse);

@@ -1,25 +1,21 @@
-import 'dart:async';
-import 'dart:convert';
-import 'dart:typed_data';
-
 import 'package:http/http.dart' as http;
-import 'package:path/path.dart';
 import 'package:tekartik_firebase_firestore/firestore.dart' as firestore;
 import 'package:tekartik_firebase_firestore/firestore.dart' as _firestore;
 import 'package:tekartik_firebase_firestore/utils/auto_id_generator.dart';
 import 'package:tekartik_http/http.dart' as common;
+import 'package:tekartik_http_firestore_redirect/src/import.dart';
 
 final String paramMethod = 'method';
 final String paramBody = 'body';
 final String paramError = 'error';
 final String paramMessage = 'message';
 final String paramUrl = 'url';
-final String paramDate = 'date';
+final String paramTimestamp = 'timestamp';
 final String paramHeaders = 'headers';
 final String paramStatusCode = 'statusCode'; // int response
 final String httpClientFactoryFirestoreDefaultName = 'any';
-final String firestoreHttpContextRequestsPartName = 'requests';
-final String firestoreHttpContextResponsesPartName = 'responses';
+final String firestoreHttpContextRequestsPartName = 'request';
+final String firestoreHttpContextResponsesPartName = 'response';
 
 class HttpClientFactoryFirestore implements common.HttpClientFactory {
   // FirebaseService _firebaseService;
@@ -45,35 +41,7 @@ class HttpClientFactoryFirestore implements common.HttpClientFactory {
   Future<bool> get ready async => true;
 }
 
-class ResponseFirestore implements http.Response {
-  @override
-  late String body;
-
-  @override
-  late int statusCode;
-
-  @override
-  Uint8List get bodyBytes => throw UnsupportedError('bodyBytes');
-
-  @override
-  int? get contentLength => throw UnsupportedError('contentLength');
-
-  @override
-  Map<String, String> get headers => throw UnsupportedError('headers');
-
-  @override
-  bool get isRedirect => throw UnsupportedError('isRedirect');
-
-  @override
-  bool get persistentConnection =>
-      throw UnsupportedError('persistentConnection');
-
-  @override
-  String? get reasonPhrase => throw UnsupportedError('reasonPhrase');
-
-  @override
-  http.BaseRequest? get request => throw UnsupportedError('request');
-}
+typedef ResponseFirestore = http.Response;
 
 class Request {
   String method;
@@ -120,29 +88,6 @@ class FirestoreHttpClient extends Object implements http.Client {
           {Map<String, String>? headers, body, Encoding? encoding}) =>
       curl(Request(common.httpMethodPut, url, headers: headers, body: body));
   Future<ResponseFirestore> curl(Request request) async {
-    var firestore = await firestoreReady;
-    var data = <String, dynamic>{};
-
-    data[paramUrl] = request.url;
-    data[paramMethod] = request.method;
-    if (request.headers != null) {
-      data[paramHeaders] = request.headers;
-    }
-    if (request.body != null) {
-      data[paramBody] = request.body;
-    }
-    data[paramDate] = _firestore.FieldValue.serverTimestamp;
-
-    var docReference = firestore
-        .collection(
-            url.join(httpContext.path, firestoreHttpContextRequestsPartName))
-        .doc(AutoIdGenerator.autoId());
-
-    var responseReference = firestore.doc(url.join(httpContext.path,
-        firestoreHttpContextResponsesPartName, docReference.id));
-
-    Completer<Map<String, Object?>> responseCompleter =
-        Completer<Map<String, Object>>();
     StreamSubscription? responseSubscription;
 
     void cancelResponseSuscription() {
@@ -150,35 +95,69 @@ class FirestoreHttpClient extends Object implements http.Client {
       responseSubscription = null;
     }
 
-    responseSubscription = responseReference.onSnapshot().listen((doc) {
-      if (doc.exists) {
-        var data = doc.data;
-        responseCompleter.complete(data);
-        cancelResponseSuscription();
+    try {
+      var firestore = await firestoreReady;
+      var data = <String, Object?>{};
+
+      data[paramUrl] = request.url.toString();
+      data[paramMethod] = request.method;
+      if (request.headers != null) {
+        data[paramHeaders] = request.headers;
       }
-    });
-    await docReference.set(data);
+      if (request.body != null) {
+        if (request.body is Uint8List) {
+          data[paramBody] = Blob(request.body as Uint8List);
+        } else {
+          data[paramBody] = request.body;
+        }
+      }
+      data[paramTimestamp] = _firestore.FieldValue.serverTimestamp;
 
-    //devPrint("request ${docReference?.path} $data");
+      var docReference = firestore
+          .collection(
+              url.join(httpContext.path, firestoreHttpContextRequestsPartName))
+          .doc(AutoIdGenerator.autoId());
 
-    var responseData = await responseCompleter.future;
+      var responsePath = url.join(httpContext.path,
+          firestoreHttpContextResponsesPartName, docReference.id);
+      var responseReference = firestore.doc(responsePath);
 
-    //devPrint("response ${responseReference?.path} $responseData");
+      var responseCompleter = Completer<Model>();
 
-    cancelResponseSuscription();
+      responseSubscription = responseReference.onSnapshot().listen((doc) {
+        if (doc.exists) {
+          var data = doc.data;
+          responseCompleter.complete(data);
+          cancelResponseSuscription();
+        }
+      });
+      await docReference.set(data);
 
-    var response = ResponseFirestore()
-      ..body = responseData[paramBody] as String
-      ..statusCode = responseData[paramStatusCode] as int;
-    return response;
+      //devPrint("request ${docReference?.path} $data");
 
-    // TODO wait for response
+      var responseData =
+          await responseCompleter.future.timeout(Duration(seconds: 30));
+
+      //devPrint("response ${responseReference?.path} $responseData");
+
+      cancelResponseSuscription();
+
+      var bodyBytes = (responseData[paramBody] as Blob?)?.data ?? Uint8List(0);
+
+      var statusCode = responseData[paramStatusCode] as int;
+      var headers =
+          (responseData[paramHeaders] as Map?)?.cast<String, String>() ??
+              <String, String>{};
+      var response =
+          ResponseFirestore.bytes(bodyBytes, statusCode, headers: headers);
+      return response;
+    } finally {
+      cancelResponseSuscription();
+    }
   }
 
   @override
-  void close() {
-    // TODO: implement close
-  }
+  void close() {}
 
   @override
   Future<http.Response> head(url, {Map<String, String>? headers}) {
@@ -196,7 +175,39 @@ class FirestoreHttpClient extends Object implements http.Client {
   }
 
   @override
-  Future<http.StreamedResponse> send(http.BaseRequest request) {
-    throw UnsupportedError('send');
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    // Encoding? encoding;
+    Uint8List? bodyBytes;
+    if (request is http.Request) {
+      // encoding = request.encoding;
+      bodyBytes = request.bodyBytes;
+    } else if (request is http.MultipartRequest) {
+      throw UnsupportedError('multi part streamed requests is not supported');
+      /*
+      requestCopy = http.MultipartRequest(request.method, request.url)
+        ..fields.addAll(request.fields)
+        ..files.addAll(request.files);*/
+    } else if (request is http.StreamedRequest) {
+      throw UnsupportedError('copying streamed requests is not supported');
+    } else {
+      throw UnsupportedError('request type is unknown, cannot copy');
+    }
+    var headers = Map<String, String>.from(request.headers);
+
+    var response = await curl(Request(request.method, request.url,
+        headers: headers, body: bodyBytes));
+
+    try {
+      return http.StreamedResponse(
+          http.ByteStream.fromBytes(response.bodyBytes), response.statusCode,
+          contentLength: response.contentLength,
+          request: response.request,
+          headers: response.headers,
+          isRedirect: response.isRedirect,
+          persistentConnection: response.persistentConnection,
+          reasonPhrase: response.reasonPhrase);
+    } catch (_) {
+      rethrow;
+    }
   }
 }
