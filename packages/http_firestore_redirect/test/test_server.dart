@@ -7,6 +7,11 @@ Future<HttpServer> serve(HttpServerFactory factory, int port) async {
   server.listen((request) async {
     var statusCode = parseInt(request.uri.queryParameters['statusCode']);
 
+    var header1 = request.uri.queryParameters['header1'];
+    if (header1 != null) {
+      request.response.headers.add('header1', header1);
+    }
+
     request.response.headers.contentType =
         ContentType.parse(httpContentTypeText);
     var body = request.uri.queryParameters['body'];

@@ -2,7 +2,7 @@ import 'package:tekartik_http_firestore_redirect/src/firestore/model/fs_request.
 import 'package:tekartik_http_firestore_redirect/src/firestore/model/fs_response.dart';
 import 'package:tekartik_http_firestore_redirect/src/import.dart';
 
-import 'firestore_http_client.dart';
+import 'http_to_firestore_client.dart';
 
 /// /root_project
 ///

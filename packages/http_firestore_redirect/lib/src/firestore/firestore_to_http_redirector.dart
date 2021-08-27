@@ -8,7 +8,8 @@ import 'package:path/path.dart' as _path;
 import 'package:tekartik_firebase/firebase.dart';
 import 'package:tekartik_firebase_firestore/firestore.dart';
 import 'package:tekartik_http/http.dart';
-import 'package:tekartik_http_firestore_redirect/src/firestore/firestore_http_client.dart';
+import 'package:tekartik_http_firestore_redirect/src/firestore/http_to_firestore_client.dart';
+import 'package:tekartik_http_firestore_redirect/src/import.dart';
 
 class Redirector {
   // Find by name if any
@@ -99,7 +100,7 @@ class RedirectorService {
           //url ??= '';
           if (url != null) {
             var dataHeaders = data[paramHeaders] as Map?;
-            var headers = <String, String?>{};
+            var headers = <String, String>{};
             if (dataHeaders is Map) {
               dataHeaders.forEach((k, v) {
                 String? value;
@@ -108,7 +109,9 @@ class RedirectorService {
                 } else if (v is String) {
                   value = v;
                 }
-                headers[k as String] = value;
+                if (value != null) {
+                  headers[k as String] = value;
+                }
               });
             }
 
@@ -129,35 +132,39 @@ class RedirectorService {
             try {
               switch (method) {
                 case httpMethodGet:
-                  response = await httpClient.get(Uri.parse(url),
-                      headers: headers as Map<String, String>?);
+                  response =
+                      await httpClient.get(Uri.parse(url), headers: headers);
                   break;
                 case httpMethodPost:
                   response = await httpClient.post(Uri.parse(url),
-                      headers: headers as Map<String, String>?, body: body);
+                      headers: headers, body: body);
                   break;
                 case httpMethodDelete:
-                  response = await httpClient.delete(Uri.parse(url),
-                      headers: headers as Map<String, String>?);
+                  response =
+                      await httpClient.delete(Uri.parse(url), headers: headers);
                   break;
                 case httpMethodPut:
                   response = await httpClient.put(Uri.parse(url),
-                      headers: headers as Map<String, String>?, body: body);
+                      headers: headers, body: body);
                   break;
                 case httpMethodPatch:
                   response = await httpClient.patch(Uri.parse(url),
-                      headers: headers as Map<String, String>?, body: body);
+                      headers: headers, body: body);
                   break;
               }
-            } catch (e) {
+            } catch (e, st) {
               dataResponse[paramError] = <String, dynamic>{
                 paramMessage: e.toString()
               };
+              if (isDebug) {
+                print(st);
+              }
             }
 
             if (response != null) {
               dataResponse[paramStatusCode] = response.statusCode;
-              dataResponse[paramBody] = response.body;
+              dataResponse[paramBody] = Blob(response.bodyBytes);
+              dataResponse[paramHeaders] = response.headers;
             }
             dataResponse[paramUrl] = url;
             dataResponse[paramTimestamp] = FieldValue.serverTimestamp;
