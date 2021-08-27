@@ -1,5 +1,6 @@
 import 'package:http/http.dart' as http;
 import 'package:tekartik_common_utils/common_utils_import.dart';
+import 'package:tekartik_common_utils/env_utils.dart';
 import 'package:tekartik_http/http.dart';
 import 'package:tekartik_http/http_client.dart';
 import 'package:tekartik_http_redirect/http_redirect.dart';
@@ -90,7 +91,9 @@ class HttpRedirectServer {
 
       var fullUrl = request.headers.value(redirectUrlHeader);
 
-      if (baseUrl == null && fullUrl == null) {
+      if (baseUrl == null &&
+          fullUrl == null &&
+          !options.allowMissingRedirectHeader) {
         print('no host port');
         request.response
           ..statusCode = 405
@@ -104,8 +107,11 @@ class HttpRedirectServer {
           await proxyHttpRequest(options, request, baseUrl,
               uri: fullUrl != null ? Uri.parse(fullUrl) : null,
               client: client!);
-        } catch (e) {
+        } catch (e, st) {
           print('proxyHttpRequest error $e');
+          if (isDebug) {
+            print(st);
+          }
           try {
             request.response
               ..statusCode = 405

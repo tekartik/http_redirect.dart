@@ -32,7 +32,11 @@ Future proxyHttpRequest(Options options, HttpRequest request, String? baseUrl,
       url = _path.url.join(baseUrl!, path);
       // print('baseUrl: $baseUrl, path: $path, url $url');
     }
-    uri = Uri.parse(url!);
+    if (url != null) {
+      uri = Uri.parse(url);
+    } else {
+      uri = request.requestedUri;
+    }
   }
 
   if (options.forwardArguments) {
@@ -174,6 +178,8 @@ class Options {
   Object? host;
 
   List<String>? forwardedHeaders;
+
+  bool allowMissingRedirectHeader = false;
 
   bool containsHeader(String name) {
     return _lowerCaseCorsHeaders.contains(name.toLowerCase());
