@@ -17,6 +17,8 @@ final String httpClientFactoryFirestoreDefaultName = 'any';
 final String firestoreHttpContextRequestsPartName = 'request';
 final String firestoreHttpContextResponsesPartName = 'response';
 
+var debugHttpToFirestore = devWarning(true); // false
+
 class HttpClientFactoryFirestore implements common.HttpClientFactory {
   // FirebaseService _firebaseService;
 
@@ -53,6 +55,10 @@ class Request {
 }
 
 String firestoreTekartikHttpCurlPath = url.join('tekartik_http'); //, 'curl');
+
+class ResponseRequest extends http.BaseRequest {
+  ResponseRequest(String method, Uri url) : super(method, url);
+}
 
 class FirestoreHttpClient extends Object implements http.Client {
   final HttpClientFactoryFirestore httpContext;
@@ -133,13 +139,18 @@ class FirestoreHttpClient extends Object implements http.Client {
       });
       await docReference.set(data);
 
+      if (debugHttpToFirestore) {
+        print('[REQ] ${docReference.id} $data');
+      }
       //devPrint("request ${docReference?.path} $data");
 
       var responseData =
           await responseCompleter.future.timeout(Duration(seconds: 30));
 
       //devPrint("response ${responseReference?.path} $responseData");
-
+      if (debugHttpToFirestore) {
+        print('[RESP] $responseData');
+      }
       cancelResponseSuscription();
 
       var bodyBytes = (responseData[paramBody] as Blob?)?.data ?? Uint8List(0);
@@ -148,8 +159,9 @@ class FirestoreHttpClient extends Object implements http.Client {
       var headers =
           (responseData[paramHeaders] as Map?)?.cast<String, String>() ??
               <String, String>{};
-      var response =
-          ResponseFirestore.bytes(bodyBytes, statusCode, headers: headers);
+      var response = ResponseFirestore.bytes(bodyBytes, statusCode,
+          headers: headers,
+          request: ResponseRequest(request.method, request.url));
       return response;
     } finally {
       cancelResponseSuscription();

@@ -20,14 +20,16 @@ void main() {
   run(httpFactory: httpFactory, firestore: firestore);
 }
 */
-void runHttpRedirectTest({
-  required HttpFactory httpFactory,
-  HttpFactory? testServerHttpFactory,
-}) {
+void runHttpRedirectTest(
+    {required HttpFactory httpFactory,
+    HttpFactory? testServerHttpFactory,
+    HttpClientFactory? outboundHttpClientFactory,
+    Uri? overridenClientUri}) {
   final httpClientFactory = httpFactory.client;
   final httpServerFactory = httpFactory.server;
 
   var targetServerHttpFactory = testServerHttpFactory ?? httpFactory;
+  outboundHttpClientFactory ??= targetServerHttpFactory.client;
   group(
     'http_redirect_test',
     () {
@@ -35,18 +37,24 @@ void runHttpRedirectTest({
       late http.Client client;
       late HttpRedirectServer httpRedirectServer;
       late Uri redirectUri;
+      late Uri clientUri;
       setUpAll(() async {
         server = await serveEchoParams(targetServerHttpFactory.server, 0);
         var uri = httpServerGetUri(server);
-        client = httpClientFactory.newClient();
+        // devPrint('serverUri: $uri');
+        /*if (newClientFactory != null) {
+          newClientFactory = newClientFactory();
+        }*/
+        client = (outboundHttpClientFactory ?? httpClientFactory).newClient();
         httpRedirectServer = await HttpRedirectServer.startServer(
-            httpClientFactory: targetServerHttpFactory.client,
+            httpClientFactory: outboundHttpClientFactory,
             httpServerFactory: httpServerFactory,
             options: Options()
               ..host = localhost
               ..port = 0
               ..baseUrl = uri.toString());
         redirectUri = httpServerGetUri(httpRedirectServer.httpServer);
+        clientUri = overridenClientUri ?? redirectUri;
       });
       tearDownAll(() async {
         client.close();
@@ -55,12 +63,12 @@ void runHttpRedirectTest({
 
       test('defaultStatusCode', () async {
         var uri = httpServerGetUri(server);
-        expect(uri, isNot(redirectUri));
+        expect(uri, isNot(clientUri));
 
         // devPrint(uri);
         // devPrint(redirectUri);
         var response = await httpClientSend(
-            client, httpMethodGet, Uri.parse('$redirectUri?statusCode=none'));
+            client, httpMethodGet, Uri.parse('$clientUri?statusCode=none'));
         expect(response.isSuccessful, isTrue);
 
         expect(response.statusCode, 200);
@@ -68,26 +76,24 @@ void runHttpRedirectTest({
         expect(response.toString(), startsWith('HTTP 200'));
       });
 
-      test(
-        'success',
-        () async {
-          var response = await httpClientSend(
-              client, httpMethodGet, Uri.parse('$redirectUri?statusCode=200'));
-          expect(response.isSuccessful, isTrue);
+      test('success', () async {
+        var response = await httpClientSend(
+            client, httpMethodGet, Uri.parse('$clientUri?statusCode=200'));
+        expect(response.isSuccessful, isTrue);
 
-          expect(response.toString().startsWith('HTTP 200 size 0 headers '),
-              isTrue); // 0');
-        },
-      );
+        expect(response.toString().startsWith('HTTP 200 size 0 headers '),
+            isTrue); // 0');
+      });
 
       test(
         'failure',
         () async {
           var response = await httpClientSend(
-              client, httpMethodGet, Uri.parse('$redirectUri?statusCode=400'));
+              client, httpMethodGet, Uri.parse('$clientUri?statusCode=400'));
           expect(response.isSuccessful, isFalse);
           expect(response.statusCode, 400);
         },
+        // solo: true,
       );
 
       test('path', () async {
@@ -100,7 +106,7 @@ void runHttpRedirectTest({
 
       test('forwardArguments', () async {
         var result = await httpClientRead(
-            client, httpMethodGet, Uri.parse('$redirectUri?body=test'));
+            client, httpMethodGet, Uri.parse('$clientUri?body=test'));
         expect(result, 'test');
       });
 
@@ -109,7 +115,7 @@ void runHttpRedirectTest({
         () async {
           try {
             await httpClientSend(client, httpMethodGet,
-                Uri.parse('$redirectUri?statusCode=400&body=test'),
+                Uri.parse('$clientUri?statusCode=400&body=test'),
                 throwOnFailure: true);
             fail('should fail');
           } on HttpClientException catch (e) {
@@ -132,14 +138,14 @@ void runHttpRedirectTest({
 
       test('httpClientRead1', () async {
         var result = await httpClientRead(client, httpMethodGet,
-            Uri.parse('$redirectUri?statusCode=200&body=test'));
+            Uri.parse('$clientUri?statusCode=200&body=test'));
         expect(result, 'test');
       });
 
       test('httpClientRead2', () async {
         try {
           await httpClientRead(client, httpMethodGet,
-              Uri.parse('$redirectUri?statusCode=400&body=test'));
+              Uri.parse('$clientUri?statusCode=400&body=test'));
           fail('should fail');
         } on HttpClientException catch (e) {
           expect(e.statusCode, 400);
@@ -151,23 +157,23 @@ void runHttpRedirectTest({
       test('httpClientReadEncoding', () async {
         var body = Uri.encodeComponent('é');
         var bytes = await httpClientReadBytes(
-            client, httpMethodGet, Uri.parse('$redirectUri?body=$body'));
+            client, httpMethodGet, Uri.parse('$clientUri?body=$body'));
         expect(bytes, [195, 169]);
         try {
           expect(
               await httpClientRead(
-                  client, httpMethodGet, Uri.parse('$redirectUri?body=$body')),
+                  client, httpMethodGet, Uri.parse('$clientUri?body=$body')),
               'Ã©');
         } catch (_) {
           // failing on io...
           expect(
               await httpClientRead(
-                  client, httpMethodGet, Uri.parse('$redirectUri?body=$body')),
+                  client, httpMethodGet, Uri.parse('$clientUri?body=$body')),
               'é');
         }
         expect(
             await httpClientRead(
-                client, httpMethodGet, Uri.parse('$redirectUri?body=$body'),
+                client, httpMethodGet, Uri.parse('$clientUri?body=$body'),
                 responseEncoding: utf8),
             'é');
       });

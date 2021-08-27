@@ -78,6 +78,8 @@ class RedirectorService {
     }
   }
 
+  // final _lock = Lock();
+  var _requestIds = <String>[];
   Future _handleRequests(Firestore firestore, String path) async {
     listener?.info('listening', path);
     listener?.info('baseUrl', baseUrl);
@@ -87,92 +89,108 @@ class RedirectorService {
       var docs = snapshot.docs;
       for (var doc in docs) {
         if (doc.exists) {
-          var responsePath = _path.url.join(
-              this.path, firestoreHttpContextResponsesPartName, doc.ref.id);
-          print('redirector request ${doc.ref.path} ${doc.data}');
-
-          var httpClient = _httpClient ?? httpClientFactory.newClient();
-          var data = doc.data;
-          listener?.info('request', data);
-          var method = data[paramMethod] as String? ?? httpMethodGet;
-          var url = data[paramUrl] as String?;
-          var dataResponse = <String, dynamic>{};
-          //url ??= '';
-          if (url != null) {
-            var dataHeaders = data[paramHeaders] as Map?;
-            var headers = <String, String>{};
-            if (dataHeaders is Map) {
-              dataHeaders.forEach((k, v) {
-                String? value;
-                if (v is List) {
-                  value = v.join(',');
-                } else if (v is String) {
-                  value = v;
-                }
-                if (value != null) {
-                  headers[k as String] = value;
-                }
-              });
-            }
-
-            if (baseUrl != null) {
-              url = _path.url.join(baseUrl!, url);
-            }
-
-            Response? response;
-
-            dynamic body = data[paramBody];
-            if (body is Map) {
-              body = json.encode(body);
-            }
-            print('url $url');
-            // headers ??= {};
-            //headers['Access-Control-Allow-Origin'] = "*";
-
-            try {
-              switch (method) {
-                case httpMethodGet:
-                  response =
-                      await httpClient.get(Uri.parse(url), headers: headers);
-                  break;
-                case httpMethodPost:
-                  response = await httpClient.post(Uri.parse(url),
-                      headers: headers, body: body);
-                  break;
-                case httpMethodDelete:
-                  response =
-                      await httpClient.delete(Uri.parse(url), headers: headers);
-                  break;
-                case httpMethodPut:
-                  response = await httpClient.put(Uri.parse(url),
-                      headers: headers, body: body);
-                  break;
-                case httpMethodPatch:
-                  response = await httpClient.patch(Uri.parse(url),
-                      headers: headers, body: body);
-                  break;
-              }
-            } catch (e, st) {
-              dataResponse[paramError] = <String, dynamic>{
-                paramMessage: e.toString()
-              };
-              if (isDebug) {
-                print(st);
-              }
-            }
-
-            if (response != null) {
-              dataResponse[paramStatusCode] = response.statusCode;
-              dataResponse[paramBody] = Blob(response.bodyBytes);
-              dataResponse[paramHeaders] = response.headers;
-            }
-            dataResponse[paramUrl] = url;
-            dataResponse[paramTimestamp] = FieldValue.serverTimestamp;
+          var requestId = doc.ref.id;
+          if (_requestIds.contains(requestId)) {
+            continue;
           }
-          print('redirector response $responsePath $dataResponse');
-          listener?.info('response', dataResponse);
-          await firestore.doc(responsePath).set(dataResponse);
-          await firestore.doc(doc.ref.path).delete();
+          // await _lock.synchronized(() async {
+          try {
+            // Track answered requestId
+            _requestIds.add(requestId);
+            if (_requestIds.length > 50) {
+              _requestIds = _requestIds.sublist(10);
+            }
+            var responsePath = _path.url.join(
+                this.path, firestoreHttpContextResponsesPartName, requestId);
+            print('redirector request ${doc.ref.path} ${doc.data}');
+
+            var httpClient = _httpClient ?? httpClientFactory.newClient();
+            var data = doc.data;
+            listener?.info('request', data);
+            var method = data[paramMethod] as String? ?? httpMethodGet;
+            var url = data[paramUrl] as String?;
+            var dataResponse = <String, dynamic>{};
+            //url ??= '';
+            if (url != null) {
+              var dataHeaders = data[paramHeaders] as Map?;
+              var headers = <String, String>{};
+              if (dataHeaders is Map) {
+                dataHeaders.forEach((k, v) {
+                  String? value;
+                  if (v is List) {
+                    value = v.join(',');
+                  } else if (v is String) {
+                    value = v;
+                  }
+                  if (value != null) {
+                    headers[k as String] = value;
+                  }
+                });
+              }
+
+              if (baseUrl != null) {
+                url = _path.url.join(baseUrl!, url);
+              }
+
+              Response? response;
+
+              dynamic body = data[paramBody];
+              if (body is Map) {
+                body = json.encode(body);
+              }
+              print('url $url');
+              // headers ??= {};
+              //headers['Access-Control-Allow-Origin'] = "*";
+
+              try {
+                switch (method) {
+                  case httpMethodGet:
+                    response =
+                        await httpClient.get(Uri.parse(url), headers: headers);
+                    break;
+                  case httpMethodPost:
+                    response = await httpClient.post(Uri.parse(url),
+                        headers: headers, body: body);
+                    break;
+                  case httpMethodDelete:
+                    response = await httpClient.delete(Uri.parse(url),
+                        headers: headers);
+                    break;
+                  case httpMethodPut:
+                    response = await httpClient.put(Uri.parse(url),
+                        headers: headers, body: body);
+                    break;
+                  case httpMethodPatch:
+                    response = await httpClient.patch(Uri.parse(url),
+                        headers: headers, body: body);
+                    break;
+                }
+              } catch (e, st) {
+                dataResponse[paramError] = <String, dynamic>{
+                  paramMessage: e.toString()
+                };
+                if (isDebug) {
+                  print(st);
+                }
+              }
+
+              if (response != null) {
+                dataResponse[paramStatusCode] = response.statusCode;
+                dataResponse[paramBody] = Blob(response.bodyBytes);
+                dataResponse[paramHeaders] = response.headers;
+              }
+              dataResponse[paramUrl] = url;
+              dataResponse[paramTimestamp] = FieldValue.serverTimestamp;
+            }
+
+            print('redirector response $responsePath $dataResponse');
+
+            listener?.info('response', dataResponse);
+            await firestore.doc(responsePath).set(dataResponse);
+          } finally {
+            await firestore.doc(doc.ref.path).delete();
+          }
+          //});
         }
       }
     });
