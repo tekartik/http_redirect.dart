@@ -1,5 +1,3 @@
-import 'package:cv/cv.dart';
-import 'package:tekartik_firebase_firestore/firestore.dart';
 import 'package:tekartik_http_firestore_redirect/src/firestore/model/fs_models.dart';
 import 'package:tekartik_http_firestore_redirect/src/firestore/model/fs_request.dart';
 import 'package:tekartik_http_firestore_redirect/src/firestore/model/fs_response.dart';

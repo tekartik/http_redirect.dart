@@ -1,7 +1,6 @@
 import 'package:http/http.dart' as http;
 import 'package:tekartik_firebase_firestore/firestore.dart' as firestore;
 import 'package:tekartik_firebase_firestore/firestore.dart' as _firestore;
-import 'package:tekartik_firebase_firestore/utils/auto_id_generator.dart';
 import 'package:tekartik_http/http.dart' as common;
 import 'package:tekartik_http_firestore_redirect/src/import.dart';
 
