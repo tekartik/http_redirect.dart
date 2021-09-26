@@ -1,12 +1,7 @@
-import 'dart:async';
-import 'dart:convert';
-
 import 'package:http/http.dart';
 import 'package:http/http.dart' as http;
-import 'package:path/path.dart';
 import 'package:path/path.dart' as _path;
 import 'package:tekartik_firebase/firebase.dart';
-import 'package:tekartik_firebase_firestore/firestore.dart';
 import 'package:tekartik_http/http.dart';
 import 'package:tekartik_http_firestore_redirect/src/firestore/http_to_firestore_client.dart';
 import 'package:tekartik_http_firestore_redirect/src/import.dart';
@@ -29,6 +24,7 @@ class RedirectorService {
   final Firestore firestore;
   final Redirector redirector;
   Listener? listener;
+
   // late HttpClientFactoryFirestore firestoreHttpContext;
   final HttpClientFactory httpClientFactory;
   StreamSubscription<QuerySnapshot>? requestsStreamSubscription;
@@ -80,6 +76,7 @@ class RedirectorService {
 
   // final _lock = Lock();
   var _requestIds = <String>[];
+
   Future _handleRequests(Firestore firestore, String path) async {
     listener?.info('listening', path);
     listener?.info('baseUrl', baseUrl);

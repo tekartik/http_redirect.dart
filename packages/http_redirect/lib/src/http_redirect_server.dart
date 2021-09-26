@@ -2,7 +2,6 @@ import 'package:http/http.dart' as http;
 import 'package:tekartik_common_utils/common_utils_import.dart';
 import 'package:tekartik_common_utils/env_utils.dart';
 import 'package:tekartik_http/http.dart';
-import 'package:tekartik_http/http_client.dart';
 import 'package:tekartik_http_redirect/http_redirect.dart';
 
 var debugHttpRedirectServer = false; // devWarning(true); // false
