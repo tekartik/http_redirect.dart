@@ -4,9 +4,9 @@ In `pubspec.yaml`:
 ```yaml
   tekartik_http_redirect:
     git:
-      url: git://github.com/tekartik/http_redirect.dart
+      url: https://github.com/tekartik/http_redirect.dart
       path: packages/http_redirect
-      ref: null_safety
+      ref: dart2_3
     version: '>=0.0.1'
 ```
 ## Node Test
