@@ -5,9 +5,9 @@ A library for Dart developers.
 ````yaml
 tekartik_http_firestore_redirect:
     git:
-      url: git://github.com/tekartik/http_redirect.dart
+      url: https://github.com/tekartik/http_redirect.dart
       path: packages/http_firestore_redirect
-      ref: null_safety
+      ref: dart2_3
     version: '>=0.0.1'
 ````
 

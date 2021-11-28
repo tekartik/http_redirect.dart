@@ -10,26 +10,26 @@ environment:
 dependencies:
   tekartik_http_redirect:
     git:
-      url: git://github.com/tekartik/http_redirect.dart
+      url: https://github.com/tekartik/http_redirect.dart
       path: packages/http_redirect
-      ref: null_safety
+      ref: dart2_3
     version: '>=0.0.1'
   tekartik_firebase_firestore_sembast:
     git:
-      url: git://github.com/tekartik/firebase_firestore.dart
+      url: https://github.com/tekartik/firebase_firestore.dart
       path: firestore_sembast
-      ref: null_safety
+      ref: dart2_3
     version: '>=0.8.0'
   tekartik_app_http:
     git:
-      url: git://github.com/tekartik/app_common_utils.dart
-      ref: null_safety
+      url: https://github.com/tekartik/app_common_utils.dart
+      ref: dart2_3
       path: app_http
     version: '>=0.1.0'
   tekartik_app_cv_firestore:
     git:
-      url: git://github.com/tekartik/app_common_utils.dart
-      ref: null_safety
+      url: https://github.com/tekartik/app_common_utils.dart
+      ref: dart2_3
       path: app_cv_firestore
     version: '>=0.1.0'
 dev_dependencies:
@@ -37,9 +37,9 @@ dev_dependencies:
   test: ^1.16.0
   tekartik_http_redirect_test:
     git:
-      url: git://github.com/tekartik/http_redirect.dart
+      url: https://github.com/tekartik/http_redirect.dart
       path: packages/http_redirect_test
-      ref: null_safety
+      ref: dart2_3
     version: '>=0.0.1'
 dependency_overrides:
   tekartik_http_redirect:
