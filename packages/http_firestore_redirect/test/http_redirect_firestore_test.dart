@@ -1,8 +1,8 @@
 import 'package:tekartik_firebase_firestore_sembast/firestore_sembast.dart';
-import 'package:tekartik_http/http_memory.dart';
 import 'package:tekartik_http_firestore_redirect/firestore_to_http_redirect.dart';
 import 'package:tekartik_http_firestore_redirect/http_to_firestore.dart';
 import 'package:tekartik_http_firestore_redirect/src/firestore/firestore_to_http_redirector.dart';
+import 'package:tekartik_http_firestore_redirect/src/import.dart';
 import 'package:tekartik_http_redirect_test/http_redirect_test.dart';
 import 'package:test/test.dart';
 

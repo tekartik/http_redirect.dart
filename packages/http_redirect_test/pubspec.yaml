@@ -26,6 +26,8 @@ dependencies:
       path: http_test
       ref: dart2_3
     version: '>=0.5.0'
+  http:
+  path:
 dev_dependencies:
   process_run:
   test: ^1.16.0
