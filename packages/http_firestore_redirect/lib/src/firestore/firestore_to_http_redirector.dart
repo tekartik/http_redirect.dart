@@ -1,8 +1,6 @@
 import 'package:http/http.dart';
 import 'package:http/http.dart' as http;
-import 'package:path/path.dart' as _path;
-import 'package:tekartik_firebase/firebase.dart';
-import 'package:tekartik_http/http.dart';
+import 'package:path/path.dart' as p;
 import 'package:tekartik_http_firestore_redirect/src/firestore/http_to_firestore_client.dart';
 import 'package:tekartik_http_firestore_redirect/src/import.dart';
 
@@ -97,7 +95,7 @@ class RedirectorService {
             if (_requestIds.length > 50) {
               _requestIds = _requestIds.sublist(10);
             }
-            var responsePath = _path.url.join(
+            var responsePath = p.url.join(
                 this.path, firestoreHttpContextResponsesPartName, requestId);
             print('redirector request ${doc.ref.path} ${doc.data}');
 
@@ -126,7 +124,7 @@ class RedirectorService {
               }
 
               if (baseUrl != null) {
-                url = _path.url.join(baseUrl!, url);
+                url = p.url.join(baseUrl!, url);
               }
 
               Response? response;

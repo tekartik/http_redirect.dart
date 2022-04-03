@@ -1,7 +1,6 @@
 import 'package:http/http.dart' as http;
-import 'package:tekartik_firebase_firestore/firestore.dart' as firestore;
-import 'package:tekartik_firebase_firestore/firestore.dart' as _firestore;
-import 'package:tekartik_http/http.dart' as common;
+import 'package:tekartik_http_firestore_redirect/src/import.dart' as firestore;
+import 'package:tekartik_http_firestore_redirect/src/import.dart' as common;
 import 'package:tekartik_http_firestore_redirect/src/import.dart';
 
 final String paramMethod = 'method';
@@ -22,9 +21,10 @@ class HttpClientFactoryFirestore implements common.HttpClientFactory {
   // FirebaseService _firebaseService;
 
   // final firestore.FirestoreService firestoreService;
-  final _firestore.Firestore firestore;
+  final common.Firestore firestore;
 
   final String path;
+
   // final firebase.AppOptions? options;
 
   HttpClientFactoryFirestore({required this.firestore, required this.path});
@@ -34,7 +34,7 @@ class HttpClientFactoryFirestore implements common.HttpClientFactory {
     return FirestoreHttpClient(this);
   }
 
-  Future<_firestore.Firestore> get firestoreReady async {
+  Future<common.Firestore> get firestoreReady async {
     await ready;
     return firestore;
   }
@@ -92,6 +92,7 @@ class FirestoreHttpClient extends Object implements http.Client {
   Future<ResponseFirestore> put(Uri url,
           {Map<String, String>? headers, body, Encoding? encoding}) =>
       curl(Request(common.httpMethodPut, url, headers: headers, body: body));
+
   Future<ResponseFirestore> curl(Request request) async {
     StreamSubscription? responseSubscription;
 
@@ -116,7 +117,7 @@ class FirestoreHttpClient extends Object implements http.Client {
           data[paramBody] = request.body;
         }
       }
-      data[paramTimestamp] = _firestore.FieldValue.serverTimestamp;
+      data[paramTimestamp] = common.FieldValue.serverTimestamp;
 
       var docReference = firestore
           .collection(
