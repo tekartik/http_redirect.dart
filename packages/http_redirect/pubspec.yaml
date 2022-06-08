@@ -1,5 +1,5 @@
 name: tekartik_http_redirect
-description: A sample command-line application.
+description: Http redirect server and client
 version: 0.7.2
 publish_to: none
 
@@ -26,6 +26,7 @@ dependencies:
   args: '>=2.0.0'
   http:
   path:
+  async:
 
 
 dev_dependencies:

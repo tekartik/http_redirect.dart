@@ -4,6 +4,8 @@ import 'package:tekartik_common_utils/env_utils.dart';
 import 'package:tekartik_http/http.dart';
 import 'package:tekartik_http_redirect/http_redirect.dart';
 
+import 'http_redirect_common.dart';
+
 var debugHttpRedirectServer = false; // devWarning(true); // false
 
 class HttpRedirectServer {
@@ -53,7 +55,9 @@ class HttpRedirectServer {
     if (debugHttpRedirectServer) {
       print('listening on ${httpServerGetUri(server)}');
     }
-    print('from http://localhost:$port');
+    var hostPort = 'http://localhost:$port';
+    print('from $hostPort');
+    print('from $hostPort?$redirectHelpKey');
     if (options.baseUrl != null) {
       print('default redirection to ${options.baseUrl}');
     }
@@ -84,12 +88,22 @@ class HttpRedirectServer {
     */
       // compat
       var baseUrl = request.headers.value(redirectBaseUrlHeader) ??
+          request.uri.queryParameters[redirectBaseUrlHeader] ??
           // compat
           request.headers.value('_tekartik_redirect_host') ??
           options.baseUrl;
 
       var fullUrl = request.headers.value(redirectUrlHeader);
 
+      // Handle help x-tekartik-redirect-help
+      if (request.uri.queryParameters.length == 1 &&
+          request.uri.queryParameters.keys.contains(redirectHelpKey)) {
+        request.response
+          ..statusCode = 200
+          ..write('?$redirectBaseUrlHeader=https://google.com');
+        await request.response.close();
+        return;
+      }
       if (baseUrl == null &&
           fullUrl == null &&
           !options.allowMissingRedirectHeader) {
