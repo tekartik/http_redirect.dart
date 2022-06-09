@@ -6,6 +6,7 @@ import 'dart:async';
 
 import 'package:async/async.dart';
 import 'package:http/http.dart';
+import 'package:tekartik_http/http.dart';
 import 'package:tekartik_http_redirect/http_redirect.dart';
 
 /// An HTTP client wrapper that automatically call a redirect server.
@@ -49,4 +50,21 @@ class RedirectClient extends BaseClient {
 
   @override
   void close() => _inner.close();
+}
+
+/// Redirect client factory
+class RedirectClientFactory implements HttpClientFactory {
+  final Uri redirectServerUri;
+  final HttpClientFactory _inner;
+
+  RedirectClientFactory(
+    this._inner, {
+    required this.redirectServerUri,
+  });
+
+  @override
+  Client newClient() {
+    return RedirectClient(_inner.newClient(),
+        redirectServerUri: redirectServerUri);
+  }
 }

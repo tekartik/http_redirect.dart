@@ -107,7 +107,7 @@ class HttpRedirectServer {
       if (baseUrl == null &&
           fullUrl == null &&
           !options.allowMissingRedirectHeader) {
-        print('no host port');
+        print('server: no host port');
         request.response
           ..statusCode = 405
           ..write(

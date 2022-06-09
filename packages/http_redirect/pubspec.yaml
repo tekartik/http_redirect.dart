@@ -1,6 +1,6 @@
 name: tekartik_http_redirect
 description: Http redirect server and client
-version: 0.7.2
+version: 0.8.0
 publish_to: none
 
 environment:
