@@ -2,18 +2,17 @@ import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 import 'package:tekartik_common_utils/common_utils_import.dart';
 import 'package:tekartik_http/http.dart';
+import 'package:tekartik_http_redirect/src/http_redirect_common.dart';
 import 'package:tekartik_http_redirect/src/http_redirect_server.dart';
 
+export 'src/http_redirect_common.dart'
+    show redirectUrlHeader, redirectBaseUrlHeader;
 export 'src/http_redirect_server.dart' show HttpRedirectServer;
 
 Level? logLevel;
 
-const String redirectBaseUrlHeader = 'x-tekartik-redirect-base-url';
-
 // request
 const String hostHeader = 'host';
-// response
-const String redirectUrlHeader = 'x-tekartik-redirect-url';
 
 /// Proxy the HTTP request to the specified server.
 Future proxyHttpRequest(Options options, HttpRequest request, String? baseUrl,
@@ -257,7 +256,8 @@ Future<HttpServer> startServer(
         request.headers.value('_tekartik_redirect_host') ??
         options.baseUrl;
 
-    var fullUrl = request.headers.value(redirectUrlHeader);
+    var fullUrl = request.headers.value(redirectUrlHeader) ??
+        request.uri.queryParameters[redirectUrlHeader];
 
     if (baseUrl == null && fullUrl == null) {
       print('no host port');
