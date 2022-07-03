@@ -55,9 +55,9 @@ class HttpRedirectServer {
     if (debugHttpRedirectServer) {
       print('listening on ${httpServerGetUri(server)}');
     }
-    var hostPort = 'http://localhost:$port';
-    print('from $hostPort');
-    print('from $hostPort?$redirectHelpKey');
+    //var hostPort = httpServerGetUri(server);
+    //print('from $hostPort');
+    //print('from $hostPort?$redirectHelpKey');
     if (options.baseUrl != null) {
       print('default redirection to ${options.baseUrl}');
     }

@@ -8,7 +8,9 @@ import 'package:test/test.dart';
 import 'multiplatform/http_redirect_test.dart';
 
 void main() {
+  // debugHttpRedirectServer = devWarning(true);
   run(httpFactory: httpFactoryIo);
   run(httpFactory: httpFactoryIo, testServerHttpFactory: httpFactoryMemory);
+
   run(httpFactory: httpFactoryMemory, testServerHttpFactory: httpFactoryIo);
 }

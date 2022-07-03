@@ -221,7 +221,7 @@ Future<HttpServer> startServer(
   var port = options.port ?? 8180;
   final server = await factory.bind(host, port);
   print('listening on $host port $port');
-  print('from http://localhost:$port');
+  print('from ${httpServerGetUri(server)}');
   if (options.baseUrl != null) {
     print('default redirection to ${options.baseUrl}');
   }
