@@ -9,13 +9,15 @@ void main() {
 }
 
 void run({
-  HttpFactory? httpFactory,
+  required HttpFactory httpFactory,
   //HttpClientFactory? httpClientFactory,
   //HttpServerFactory? httpServerFactory,
   HttpFactory? testServerHttpFactory,
 }) {
-  var clientFactory = testServerHttpFactory?.client ?? httpFactory!.client;
-  var serverFactory = httpFactory!.server;
+  var clientFactory = httpFactory.client;
+  var serverFactory = httpFactory.server;
+  var finalServerClientFactory = testServerHttpFactory?.client ?? clientFactory;
+
   group('redirect', () {
     test('redirect', () async {
       var httpServer = await (testServerHttpFactory?.server ?? serverFactory)
@@ -27,24 +29,24 @@ void run({
           ..close();
       });
       var port = httpServer.port;
-      //devPrint('port: $port');
+
+      var finalUri = httpServerGetUri(httpServer);
+      // devPrint('finalUri: $finalUri');
 
       var httpRedirectServer = await HttpRedirectServer.startServer(
-          httpClientFactory: testServerHttpFactory?.client ?? clientFactory,
+          httpClientFactory: finalServerClientFactory,
           httpServerFactory: serverFactory,
           options: Options()
             ..host = localhost
             ..port = 0
-            ..baseUrl = 'http://$localhost:$port');
+            ..baseUrl = finalUri.toString());
 
       var client = clientFactory.newClient();
       var redirectPort = httpRedirectServer.port;
+      var redirectUri = httpServerGetUri(httpRedirectServer.httpServer);
       //devPrint('redirectPort: $redirectPort');
       expect(port, isNot(redirectPort));
-      expect(await client.read(Uri.parse('http://$localhost:$port')),
-          'tekartik_http_redirect');
-      expect(await client.read(Uri.parse('http://$localhost:$redirectPort')),
-          'tekartik_http_redirect');
+      expect(await client.read(redirectUri), 'tekartik_http_redirect');
       client.close();
 
       await httpRedirectServer.close();
@@ -52,34 +54,35 @@ void run({
     });
 
     test('redirectClient', () async {
-      var httpServer = await (testServerHttpFactory?.server ?? serverFactory)
-          .bind(localhost, 0);
+      var finalServerFactory = testServerHttpFactory?.server ?? serverFactory;
+      var httpServer = await (finalServerFactory).bind(localhost, 0);
 
       httpServer.listen((HttpRequest request) {
         request.response
           ..write('tekartik_http_redirect')
           ..close();
       });
-      var port = httpServer.port;
-      //devPrint('port: $port');
+      //var port = httpServer.port;
+      var uri = httpServerGetUri(httpServer);
+      // devPrint('uri: $uri');
 
       var httpRedirectServer = await HttpRedirectServer.startServer(
-          httpClientFactory: testServerHttpFactory?.client ?? clientFactory,
+          httpClientFactory: finalServerClientFactory,
           httpServerFactory: serverFactory,
           options: Options()
             ..host = localhost
-            ..port = 0);
+            ..port = 0
+            ..baseUrl = uri.toString());
 
-      var redirectPort = httpRedirectServer.port;
-      var redirectServerUrl = 'http://$localhost:$redirectPort';
+      var redirectServerUri = httpServerGetUri(httpRedirectServer.httpServer);
+      // devPrint('redirectServerUrl: $redirectServerUri');
       var redirectClientFactory = RedirectClientFactory(clientFactory,
-          redirectServerUri: Uri.parse(redirectServerUrl));
+          redirectServerUri: redirectServerUri);
       var client = redirectClientFactory.newClient();
 
       //devPrint('redirectPort: $redirectPort');
-      expect(port, isNot(redirectPort));
-      expect(await client.read(Uri.parse('http://$localhost:$port')),
-          'tekartik_http_redirect');
+      // expect(port, isNot(redirectPort));
+      expect(await client.read(uri), 'tekartik_http_redirect');
       client.close();
 
       await httpRedirectServer.close();
