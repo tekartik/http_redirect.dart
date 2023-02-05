@@ -57,7 +57,7 @@ void run(
       //var response = await client.get('${uri}/?statusCode=200');
       var client = fbHttpClientFactory.newClient();
 
-      var completer = Completer();
+      var completer = Completer<void>();
       var subscription =
           firestore.collection(requestPath).onSnapshot().listen((snapshot) {
         if (snapshot.docs.isNotEmpty) {
@@ -73,7 +73,7 @@ void run(
               'timestamp': timestamp,
               'url': url,
               'method': 'GET',
-              'headers': {},
+              'headers': <String, Object?>{},
               'body': blob,
             });
 
@@ -108,7 +108,7 @@ void run(
       //var response = await client.get('${uri}/?statusCode=200');
       var client = fbHttpClientFactory.newClient();
 
-      var completer = Completer();
+      var completer = Completer<void>();
       var subscription =
           firestore.collection(requestPath).onSnapshot().listen((snapshot) {
         if (snapshot.docs.isNotEmpty) {
