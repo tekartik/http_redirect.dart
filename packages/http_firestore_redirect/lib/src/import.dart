@@ -14,5 +14,4 @@ export 'package:tekartik_firebase_firestore/firestore.dart';
 export 'package:tekartik_firebase_firestore/utils/auto_id_generator.dart';
 export 'package:tekartik_firebase_firestore/utils/collection.dart';
 export 'package:tekartik_http/http.dart';
-export 'package:tekartik_http/http.dart';
 export 'package:tekartik_http/http_memory.dart';

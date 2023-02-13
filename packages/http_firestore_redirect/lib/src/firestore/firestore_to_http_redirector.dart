@@ -15,7 +15,7 @@ class Redirector {
 }
 
 abstract class Listener {
-  void info(String message, var data);
+  void info(String message, Object? data);
 }
 
 class RedirectorService {

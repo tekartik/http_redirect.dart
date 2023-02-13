@@ -71,7 +71,7 @@ void run(
       var requestMap = fsRequest.toMapWithServerTimestamp();
       await reqRef.setMap(firestore, requestMap);
 
-      var completer = Completer();
+      var completer = Completer<void>();
       var subscription = respRef.onSnapshot(firestore).listen((response) {
         if (response.exists) {
           if (!completer.isCompleted) {
@@ -123,7 +123,7 @@ void run(
       var requestMap = fsRequest.toMapWithServerTimestamp();
       await reqRef.setMap(firestore, requestMap);
 
-      var completer = Completer();
+      var completer = Completer<void>();
       var subscription = respRef.onSnapshot(firestore).listen((response) {
         if (response.exists) {
           if (!completer.isCompleted) {
