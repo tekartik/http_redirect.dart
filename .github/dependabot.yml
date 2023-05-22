@@ -1,0 +1,35 @@
+# Dependabot configuration file.
+# See https://docs.github.com/en/code-security/dependabot/dependabot-version-updates
+version: 2
+
+enable-beta-ecosystems: true
+updates:
+  - package-ecosystem: "pub"
+    directory: "packages/http_firestore_redirect"
+    schedule:
+      interval: "monthly"
+
+  - package-ecosystem: "pub"
+    directory: "packages/http_redirect"
+    schedule:
+      interval: "monthly"
+
+  - package-ecosystem: "pub"
+    directory: "packages/http_redirect_client_browser_test"
+    schedule:
+      interval: "monthly"
+
+  - package-ecosystem: "pub"
+    directory: "packages/http_redirect_test"
+    schedule:
+      interval: "monthly"
+
+  - package-ecosystem: "pub"
+    directory: "repo_support"
+    schedule:
+      interval: "monthly"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"

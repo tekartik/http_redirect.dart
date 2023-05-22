@@ -6,7 +6,11 @@ import 'package:tekartik_http_redirect/src/http_redirect_common.dart';
 import 'package:tekartik_http_redirect/src/http_redirect_server.dart';
 
 export 'src/http_redirect_common.dart'
-    show redirectUrlHeader, redirectBaseUrlHeader;
+    show
+        redirectUrlHeader,
+        redirectBaseUrlHeader,
+        redirectServerConvertRequestHeaders,
+        redirectClientConvertRequestHeaders;
 export 'src/http_redirect_server.dart' show HttpRedirectServer;
 
 Level? logLevel;
@@ -67,6 +71,17 @@ Future proxyHttpRequest(Options options, HttpRequest request, String? baseUrl,
       }
       return;
     }
+    if (name == hostHeader) {
+      // don't forward host (likely localhost: 8180)
+      // needed for google storage
+      return;
+    }
+    if (name.startsWith(redirectForwardKeyPrefix)) {
+      var forwardedName = name.substring(redirectForwardKeyPrefix.length);
+      headers![forwardedName] = values.join(',');
+      return;
+    }
+
     if (options.handleCors) {
       // don't forward redirect url
       if (name == redirectBaseUrlHeader) {
@@ -78,14 +93,11 @@ Future proxyHttpRequest(Options options, HttpRequest request, String? baseUrl,
       }
       if (options.containsHeader(name)) {
         setValues();
-      }
-    } else {
-      if (name == hostHeader) {
-        // don't forward host (likely localhost: 8180)
-        // needed for google storage
         return;
       }
-      setValues();
+    } else {
+      // setValues();
+      return;
     }
   });
   // print('headers: $headers');
