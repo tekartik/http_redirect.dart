@@ -4,14 +4,14 @@ version: 1.0.0
 publish_to: none
 
 environment:
-  sdk: '>=2.18.0 <4.0.0'
+  sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
   tekartik_test_menu_browser:
     git:
       url: https://github.com/tekartik/test_menu.dart
       path: test_menu_browser
-      ref: dart2_3
+      ref: dart3a
     version: '>=0.4.7'
   tekartik_http_redirect:
     path: ../http_redirect

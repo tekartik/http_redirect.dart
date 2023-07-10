@@ -6,7 +6,7 @@ In `pubspec.yaml`:
     git:
       url: https://github.com/tekartik/http_redirect.dart
       path: packages/http_redirect
-      ref: dart2_3
+      ref: dart3a
     version: '>=0.0.1'
 ```
 ## Node Test
