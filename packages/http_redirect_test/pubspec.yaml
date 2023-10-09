@@ -5,26 +5,26 @@ publish_to: none
 # homepage: https://www.example.com
 
 environment:
-  sdk: '>=2.18.0 <3.0.0'
+  sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
   tekartik_http_redirect:
     git:
       url: https://github.com/tekartik/http_redirect.dart
       path: packages/http_redirect
-      ref: dart2_3
+      ref: dart3a
     version: '>=0.0.1'
   tekartik_app_http:
     git:
       url: https://github.com/tekartik/app_common_utils.dart
-      ref: dart2_3
+      ref: dart3a
       path: app_http
     version: '>=0.1.0'
   tekartik_http_test:
     git:
       url: https://github.com/tekartik/http.dart
       path: http_test
-      ref: dart2_3
+      ref: dart3a
     version: '>=0.5.0'
   http:
   path:

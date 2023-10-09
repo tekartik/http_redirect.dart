@@ -88,5 +88,53 @@ void run({
       await httpRedirectServer.close();
       await httpServer.close();
     });
+
+    test('headers redirectClient', () async {
+      var finalServerFactory = testServerHttpFactory?.server ?? serverFactory;
+      var httpServer = await (finalServerFactory).bind(localhost, 0);
+
+      httpServer.listen((HttpRequest request) {
+        request.response
+          ..write('${request.headers.value('x-test')}')
+          ..close();
+      });
+      //var port = httpServer.port;
+      var uri = httpServerGetUri(httpServer);
+      // devPrint('uri: $uri');
+
+      var httpRedirectServer = await HttpRedirectServer.startServer(
+          httpClientFactory: finalServerClientFactory,
+          httpServerFactory: serverFactory,
+          options: Options()
+            ..host = localhost
+            ..port = 0
+            ..baseUrl = uri.toString());
+
+      var redirectServerUri = httpServerGetUri(httpRedirectServer.httpServer);
+      // devPrint('redirectServerUrl: $redirectServerUri');
+      var redirectClientFactory = RedirectClientFactory(clientFactory,
+          redirectServerUri: redirectServerUri,
+          forwardedRequestHeaders: ['x-test']);
+      var client = redirectClientFactory.newClient();
+
+      //devPrint('redirectPort: $redirectPort');
+      // expect(port, isNot(redirectPort));
+      expect(await client.read(uri, headers: {'x-test': '1234'}), '1234');
+      client.close();
+
+      redirectClientFactory = RedirectClientFactory(
+        clientFactory,
+        redirectServerUri: redirectServerUri,
+      );
+      client = redirectClientFactory.newClient();
+
+      //devPrint('redirectPort: $redirectPort');
+      // expect(port, isNot(redirectPort));
+      expect(await client.read(uri, headers: {'x-test': '1234'}), 'null');
+      client.close();
+
+      await httpRedirectServer.close();
+      await httpServer.close();
+    });
   });
 }
