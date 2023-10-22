@@ -56,7 +56,7 @@ class Request {
 String firestoreTekartikHttpCurlPath = url.join('tekartik_http'); //, 'curl');
 
 class ResponseRequest extends http.BaseRequest {
-  ResponseRequest(String method, Uri url) : super(method, url);
+  ResponseRequest(super.method, super.url);
 }
 
 class FirestoreHttpClient extends Object implements http.Client {
