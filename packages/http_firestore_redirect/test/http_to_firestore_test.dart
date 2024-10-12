@@ -1,6 +1,5 @@
 // Copyright (c) 2017, Alexandre Roux. All rights reserved. Use of this source code
 // is governed by a BSD-style license that can be found in the LICENSE file.
-import 'package:http/http.dart';
 import 'package:tekartik_firebase_firestore_sembast/firestore_sembast.dart';
 import 'package:tekartik_http_firestore_redirect/http_to_firestore.dart';
 import 'package:tekartik_http_firestore_redirect/src/firestore/model/fs_models.dart';

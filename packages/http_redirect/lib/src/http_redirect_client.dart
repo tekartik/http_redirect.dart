@@ -5,7 +5,6 @@
 import 'dart:async';
 
 import 'package:async/async.dart';
-import 'package:http/http.dart';
 import 'package:tekartik_http/http.dart';
 import 'package:tekartik_http_redirect/src/http_redirect_common.dart';
 

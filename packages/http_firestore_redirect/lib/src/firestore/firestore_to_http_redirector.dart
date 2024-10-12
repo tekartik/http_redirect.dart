@@ -1,4 +1,3 @@
-import 'package:http/http.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 import 'package:tekartik_http_firestore_redirect/src/firestore/http_to_firestore_client.dart';
