@@ -1,0 +1,10 @@
+name: _
+publish_to: none
+environment:
+  sdk: ^3.6.0
+workspace:
+  - packages/http_firestore_redirect
+  - packages/http_redirect
+  - packages/http_redirect_client_browser_test
+  - packages/http_redirect_test
+  - repo_support

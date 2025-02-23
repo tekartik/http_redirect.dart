@@ -32,6 +32,4 @@ dev_dependencies:
   process_run:
   test: '>=1.16.0'
 
-dependency_overrides:
-  tekartik_http_redirect:
-    path: ../http_redirect
+resolution: workspace

@@ -43,8 +43,5 @@ dev_dependencies:
       path: packages/http_redirect_test
       ref: dart3a
     version: '>=0.0.1'
-dependency_overrides:
-  tekartik_http_redirect:
-    path: ../http_redirect
-  tekartik_http_redirect_test:
-    path: ../http_redirect_test
+
+resolution: workspace
