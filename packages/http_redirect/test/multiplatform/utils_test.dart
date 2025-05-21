@@ -6,21 +6,30 @@ void main() {
   test('redirectClientConvertRequestHeaders', () {
     expect(redirectClientConvertRequestHeaders({}, []), <String, String>{});
     expect(redirectClientConvertRequestHeaders({}, ['a']), <String, String>{});
-    expect(redirectClientConvertRequestHeaders({'a': '1'}, []),
-        <String, String>{'a': '1'});
-    expect(redirectClientConvertRequestHeaders({'a': '1', 'b': '2'}, ['a']),
-        <String, String>{'x-tekartik-forward-a': '1', 'b': '2'});
+    expect(
+      redirectClientConvertRequestHeaders({'a': '1'}, []),
+      <String, String>{'a': '1'},
+    );
+    expect(
+      redirectClientConvertRequestHeaders({'a': '1', 'b': '2'}, ['a']),
+      <String, String>{'x-tekartik-forward-a': '1', 'b': '2'},
+    );
   });
 
   test('redirectServerConvertRequestHeaders', () {
-    expect(redirectServerConvertRequestHeaders(HttpHeadersMemory()),
-        <String, String>{});
     expect(
-        redirectServerConvertRequestHeaders(HttpHeadersMemory()..set('a', '1')),
-        <String, String>{});
+      redirectServerConvertRequestHeaders(HttpHeadersMemory()),
+      <String, String>{},
+    );
     expect(
-        redirectServerConvertRequestHeaders(
-            HttpHeadersMemory()..set('x-tekartik-forward-a', '1')),
-        <String, String>{'a': '1'});
+      redirectServerConvertRequestHeaders(HttpHeadersMemory()..set('a', '1')),
+      <String, String>{},
+    );
+    expect(
+      redirectServerConvertRequestHeaders(
+        HttpHeadersMemory()..set('x-tekartik-forward-a', '1'),
+      ),
+      <String, String>{'a': '1'},
+    );
   });
 }

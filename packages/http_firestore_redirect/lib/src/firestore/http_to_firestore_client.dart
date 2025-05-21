@@ -74,24 +74,38 @@ class FirestoreHttpClient extends Object implements http.Client {
       curl(Request(common.httpMethodGet, url, headers: headers));
 
   @override
-  Future<ResponseFirestore> post(Uri url,
-          {Map<String, String>? headers, body, Encoding? encoding}) =>
-      curl(Request(common.httpMethodPost, url, headers: headers, body: body));
+  Future<ResponseFirestore> post(
+    Uri url, {
+    Map<String, String>? headers,
+    body,
+    Encoding? encoding,
+  }) => curl(Request(common.httpMethodPost, url, headers: headers, body: body));
 
   @override
-  Future<ResponseFirestore> delete(Uri url,
-          {Map<String, String>? headers, body, Encoding? encoding}) =>
+  Future<ResponseFirestore> delete(
+    Uri url, {
+    Map<String, String>? headers,
+    body,
+    Encoding? encoding,
+  }) =>
       curl(Request(common.httpMethodDelete, url, headers: headers, body: body));
 
   @override
-  Future<ResponseFirestore> patch(Uri url,
-          {Map<String, String>? headers, body, Encoding? encoding}) =>
+  Future<ResponseFirestore> patch(
+    Uri url, {
+    Map<String, String>? headers,
+    body,
+    Encoding? encoding,
+  }) =>
       curl(Request(common.httpMethodPatch, url, headers: headers, body: body));
 
   @override
-  Future<ResponseFirestore> put(Uri url,
-          {Map<String, String>? headers, body, Encoding? encoding}) =>
-      curl(Request(common.httpMethodPut, url, headers: headers, body: body));
+  Future<ResponseFirestore> put(
+    Uri url, {
+    Map<String, String>? headers,
+    body,
+    Encoding? encoding,
+  }) => curl(Request(common.httpMethodPut, url, headers: headers, body: body));
 
   Future<ResponseFirestore> curl(Request request) async {
     StreamSubscription? responseSubscription;
@@ -121,11 +135,15 @@ class FirestoreHttpClient extends Object implements http.Client {
 
       var docReference = firestore
           .collection(
-              url.join(httpContext.path, firestoreHttpContextRequestsPartName))
+            url.join(httpContext.path, firestoreHttpContextRequestsPartName),
+          )
           .doc(AutoIdGenerator.autoId());
 
-      var responsePath = url.join(httpContext.path,
-          firestoreHttpContextResponsesPartName, docReference.id);
+      var responsePath = url.join(
+        httpContext.path,
+        firestoreHttpContextResponsesPartName,
+        docReference.id,
+      );
       var responseReference = firestore.doc(responsePath);
 
       var responseCompleter = Completer<Model>();
@@ -144,8 +162,9 @@ class FirestoreHttpClient extends Object implements http.Client {
       }
       //devPrint("request ${docReference?.path} $data");
 
-      var responseData =
-          await responseCompleter.future.timeout(Duration(seconds: 30));
+      var responseData = await responseCompleter.future.timeout(
+        Duration(seconds: 30),
+      );
 
       //devPrint("response ${responseReference?.path} $responseData");
       if (debugHttpToFirestore) {
@@ -158,10 +177,13 @@ class FirestoreHttpClient extends Object implements http.Client {
       var statusCode = responseData[paramStatusCode] as int;
       var headers =
           (responseData[paramHeaders] as Map?)?.cast<String, String>() ??
-              <String, String>{};
-      var response = ResponseFirestore.bytes(bodyBytes, statusCode,
-          headers: headers,
-          request: ResponseRequest(request.method, request.url));
+          <String, String>{};
+      var response = ResponseFirestore.bytes(
+        bodyBytes,
+        statusCode,
+        headers: headers,
+        request: ResponseRequest(request.method, request.url),
+      );
       return response;
     } finally {
       cancelResponseSuscription();
@@ -206,18 +228,21 @@ class FirestoreHttpClient extends Object implements http.Client {
     }
     var headers = Map<String, String>.from(request.headers);
 
-    var response = await curl(Request(request.method, request.url,
-        headers: headers, body: bodyBytes));
+    var response = await curl(
+      Request(request.method, request.url, headers: headers, body: bodyBytes),
+    );
 
     try {
       return http.StreamedResponse(
-          http.ByteStream.fromBytes(response.bodyBytes), response.statusCode,
-          contentLength: response.contentLength,
-          request: response.request,
-          headers: response.headers,
-          isRedirect: response.isRedirect,
-          persistentConnection: response.persistentConnection,
-          reasonPhrase: response.reasonPhrase);
+        http.ByteStream.fromBytes(response.bodyBytes),
+        response.statusCode,
+        contentLength: response.contentLength,
+        request: response.request,
+        headers: response.headers,
+        isRedirect: response.isRedirect,
+        persistentConnection: response.persistentConnection,
+        reasonPhrase: response.reasonPhrase,
+      );
     } catch (_) {
       rethrow;
     }

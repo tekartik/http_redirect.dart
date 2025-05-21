@@ -34,12 +34,14 @@ void run({
       // devPrint('finalUri: $finalUri');
 
       var httpRedirectServer = await HttpRedirectServer.startServer(
-          httpClientFactory: finalServerClientFactory,
-          httpServerFactory: serverFactory,
-          options: Options()
-            ..host = localhost
-            ..port = 0
-            ..baseUrl = finalUri.toString());
+        httpClientFactory: finalServerClientFactory,
+        httpServerFactory: serverFactory,
+        options:
+            Options()
+              ..host = localhost
+              ..port = 0
+              ..baseUrl = finalUri.toString(),
+      );
 
       var client = clientFactory.newClient();
       var redirectPort = httpRedirectServer.port;
@@ -67,17 +69,21 @@ void run({
       // devPrint('uri: $uri');
 
       var httpRedirectServer = await HttpRedirectServer.startServer(
-          httpClientFactory: finalServerClientFactory,
-          httpServerFactory: serverFactory,
-          options: Options()
-            ..host = localhost
-            ..port = 0
-            ..baseUrl = uri.toString());
+        httpClientFactory: finalServerClientFactory,
+        httpServerFactory: serverFactory,
+        options:
+            Options()
+              ..host = localhost
+              ..port = 0
+              ..baseUrl = uri.toString(),
+      );
 
       var redirectServerUri = httpServerGetUri(httpRedirectServer.httpServer);
       // devPrint('redirectServerUrl: $redirectServerUri');
-      var redirectClientFactory = RedirectClientFactory(clientFactory,
-          redirectServerUri: redirectServerUri);
+      var redirectClientFactory = RedirectClientFactory(
+        clientFactory,
+        redirectServerUri: redirectServerUri,
+      );
       var client = redirectClientFactory.newClient();
 
       //devPrint('redirectPort: $redirectPort');
@@ -103,18 +109,22 @@ void run({
       // devPrint('uri: $uri');
 
       var httpRedirectServer = await HttpRedirectServer.startServer(
-          httpClientFactory: finalServerClientFactory,
-          httpServerFactory: serverFactory,
-          options: Options()
-            ..host = localhost
-            ..port = 0
-            ..baseUrl = uri.toString());
+        httpClientFactory: finalServerClientFactory,
+        httpServerFactory: serverFactory,
+        options:
+            Options()
+              ..host = localhost
+              ..port = 0
+              ..baseUrl = uri.toString(),
+      );
 
       var redirectServerUri = httpServerGetUri(httpRedirectServer.httpServer);
       // devPrint('redirectServerUrl: $redirectServerUri');
-      var redirectClientFactory = RedirectClientFactory(clientFactory,
-          redirectServerUri: redirectServerUri,
-          forwardedRequestHeaders: ['x-test']);
+      var redirectClientFactory = RedirectClientFactory(
+        clientFactory,
+        redirectServerUri: redirectServerUri,
+        forwardedRequestHeaders: ['x-test'],
+      );
       var client = redirectClientFactory.newClient();
 
       //devPrint('redirectPort: $redirectPort');

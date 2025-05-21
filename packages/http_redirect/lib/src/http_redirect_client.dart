@@ -15,10 +15,7 @@ class RedirectClientUsingHeaders extends BaseClient {
   final Client _inner;
 
   /// Creates a client wrapping [_inner] that wrap HTTP requests to a redirect server
-  RedirectClientUsingHeaders(
-    this._inner, {
-    required this.redirectServerUri,
-  });
+  RedirectClientUsingHeaders(this._inner, {required this.redirectServerUri});
 
   final Uri redirectServerUri;
 
@@ -32,18 +29,21 @@ class RedirectClientUsingHeaders extends BaseClient {
 
   /// Returns a copy of [original] with the given [body].
   StreamedRequest _copyRequest(BaseRequest original, Stream<List<int>> body) {
-    final request = StreamedRequest(original.method, redirectServerUri)
-      ..contentLength = original.contentLength
-      ..followRedirects = original.followRedirects
-      ..headers.addAll(original.headers)
-      ..headers.addAll({redirectUrlHeader: original.url.toString()})
-      ..maxRedirects = original.maxRedirects
-      ..persistentConnection = original.persistentConnection;
+    final request =
+        StreamedRequest(original.method, redirectServerUri)
+          ..contentLength = original.contentLength
+          ..followRedirects = original.followRedirects
+          ..headers.addAll(original.headers)
+          ..headers.addAll({redirectUrlHeader: original.url.toString()})
+          ..maxRedirects = original.maxRedirects
+          ..persistentConnection = original.persistentConnection;
 
-    body.listen(request.sink.add,
-        onError: request.sink.addError,
-        onDone: request.sink.close,
-        cancelOnError: true);
+    body.listen(
+      request.sink.add,
+      onError: request.sink.addError,
+      onDone: request.sink.close,
+      cancelOnError: true,
+    );
 
     return request;
   }
@@ -83,26 +83,34 @@ class RedirectClient extends BaseClient {
     var headers = Map<String, String>.from(original.headers);
     if (forwardedRequestHeaders != null) {
       headers = redirectClientConvertRequestHeaders(
-          headers, forwardedRequestHeaders!);
+        headers,
+        forwardedRequestHeaders!,
+      );
     }
     headers[redirectUrlHeader] = original.url.toString();
-    final request = StreamedRequest(
-        original.method,
-        redirectServerUri.replace(
-            queryParameters: <String, dynamic>{}
-              ..addAll(redirectServerUri.queryParameters)))
-      // needed, maybe add an use query param option in the future
-      //          ..[redirectUrlHeader] = original.url.toString())
-      ..contentLength = original.contentLength
-      ..followRedirects = original.followRedirects
-      ..headers.addAll(headers)
-      ..maxRedirects = original.maxRedirects
-      ..persistentConnection = original.persistentConnection;
+    final request =
+        StreamedRequest(
+            original.method,
+            redirectServerUri.replace(
+              queryParameters:
+                  <String, dynamic>{}
+                    ..addAll(redirectServerUri.queryParameters),
+            ),
+          )
+          // needed, maybe add an use query param option in the future
+          //          ..[redirectUrlHeader] = original.url.toString())
+          ..contentLength = original.contentLength
+          ..followRedirects = original.followRedirects
+          ..headers.addAll(headers)
+          ..maxRedirects = original.maxRedirects
+          ..persistentConnection = original.persistentConnection;
 
-    body.listen(request.sink.add,
-        onError: request.sink.addError,
-        onDone: request.sink.close,
-        cancelOnError: true);
+    body.listen(
+      request.sink.add,
+      onError: request.sink.addError,
+      onDone: request.sink.close,
+      cancelOnError: true,
+    );
 
     return request;
   }
@@ -128,8 +136,10 @@ class RedirectClientFactory implements HttpClientFactory {
 
   @override
   Client newClient() {
-    return RedirectClient(_inner.newClient(),
-        redirectServerUri: redirectServerUri,
-        forwardedRequestHeaders: forwardedRequestHeaders);
+    return RedirectClient(
+      _inner.newClient(),
+      redirectServerUri: redirectServerUri,
+      forwardedRequestHeaders: forwardedRequestHeaders,
+    );
   }
 }

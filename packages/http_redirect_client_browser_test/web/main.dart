@@ -12,10 +12,15 @@ Future<void> main() async {
     });
     item('call_echo_8501_through_redirect_8180', () async {
       var client = Client();
-      var redirectClient = RedirectClient(client,
-          redirectServerUri: Uri.parse('http://localhost:8180'));
-      write(await redirectClient
-          .read(Uri.parse('http://localhost:8501?body=my_body')));
+      var redirectClient = RedirectClient(
+        client,
+        redirectServerUri: Uri.parse('http://localhost:8180'),
+      );
+      write(
+        await redirectClient.read(
+          Uri.parse('http://localhost:8501?body=my_body'),
+        ),
+      );
     });
     item('call_echo_8501', () async {
       var client = Client();

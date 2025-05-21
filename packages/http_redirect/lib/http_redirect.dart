@@ -19,8 +19,13 @@ Level? logLevel;
 const String hostHeader = 'host';
 
 /// Proxy the HTTP request to the specified server.
-Future proxyHttpRequest(Options options, HttpRequest request, String? baseUrl,
-    {Uri? uri, required http.Client client}) async {
+Future proxyHttpRequest(
+  Options options,
+  HttpRequest request,
+  String? baseUrl, {
+  Uri? uri,
+  required http.Client client,
+}) async {
   if (uri == null) {
     var path = request.uri.path;
     if (path.startsWith('/')) {
@@ -46,9 +51,11 @@ Future proxyHttpRequest(Options options, HttpRequest request, String? baseUrl,
     var requestUri = request.uri; //
     // Fix arguments
     uri = uri.replace(
-        queryParameters: <String, Object?>{}
-          ..addAll(uri.queryParameters)
-          ..addAll(requestUri.queryParameters));
+      queryParameters:
+          <String, Object?>{}
+            ..addAll(uri.queryParameters)
+            ..addAll(requestUri.queryParameters),
+    );
     // uri.queryParameters
   }
 
@@ -111,8 +118,13 @@ Future proxyHttpRequest(Options options, HttpRequest request, String? baseUrl,
     headers = null;
   }
 
-  var innerResponse = await httpClientSend(client, request.method, uri,
-      body: bytes, headers: headers);
+  var innerResponse = await httpClientSend(
+    client,
+    request.method,
+    uri,
+    body: bytes,
+    headers: headers,
+  );
   var innerBody = innerResponse.bodyBytes;
   var innerHeaders = innerResponse.headers;
 
@@ -215,7 +227,8 @@ class Options {
   late List<String> _lowerCaseCorsHeaders;
   String? _corsHeadersText;
 
-  String get corsHeadersText => _corsHeadersText ??= () {
+  String get corsHeadersText =>
+      _corsHeadersText ??= () {
         if (_corsHeaders == null) {
           corsHeaders = corsDefaultHeaders;
         }
@@ -228,7 +241,9 @@ class Options {
 ///
 @Deprecated('Use Redirect server')
 Future<HttpServer> startServer(
-    HttpServerFactory factory, Options options) async {
+  HttpServerFactory factory,
+  Options options,
+) async {
   var host = options.host ?? InternetAddress.anyIPv4;
   var port = options.port ?? 8180;
   final server = await factory.bind(host, port);
@@ -242,12 +257,15 @@ Future<HttpServer> startServer(
     if (options.handleCors) {
       //request.response.headers.set(HttpHeaders.CONTENT_TYPE, 'text/plain; charset=UTF-8');
       request.response.headers.add(
-          'Access-Control-Allow-Methods', 'POST, OPTIONS, GET, PATCH, DELETE');
+        'Access-Control-Allow-Methods',
+        'POST, OPTIONS, GET, PATCH, DELETE',
+      );
       request.response.headers.add('Access-Control-Allow-Origin', '*');
       request.response.headers.add(
-          'Access-Control-Allow-Headers',
-          // 'Origin,Content-Type,Authorization,Accept,connection,content-length,host,user-agent');
-          options.corsHeadersText);
+        'Access-Control-Allow-Headers',
+        // 'Origin,Content-Type,Authorization,Accept,connection,content-length,host,user-agent');
+        options.corsHeadersText,
+      );
 
       if (request.method == 'OPTIONS') {
         request.response
@@ -263,12 +281,14 @@ Future<HttpServer> startServer(
     var redirectHostPort = overridenRedirectHostPort ?? hostPort;
     */
     // compat
-    var baseUrl = request.headers.value(redirectBaseUrlHeader) ??
+    var baseUrl =
+        request.headers.value(redirectBaseUrlHeader) ??
         // compat
         request.headers.value('_tekartik_redirect_host') ??
         options.baseUrl;
 
-    var fullUrl = request.headers.value(redirectUrlHeader) ??
+    var fullUrl =
+        request.headers.value(redirectUrlHeader) ??
         request.uri.queryParameters[redirectUrlHeader];
 
     if (baseUrl == null && fullUrl == null) {
@@ -280,9 +300,13 @@ Future<HttpServer> startServer(
       await request.response.close();
     } else {
       try {
-        await proxyHttpRequest(options, request, baseUrl,
-            uri: fullUrl != null ? Uri.parse(fullUrl) : null,
-            client: http.Client());
+        await proxyHttpRequest(
+          options,
+          request,
+          baseUrl,
+          uri: fullUrl != null ? Uri.parse(fullUrl) : null,
+          client: http.Client(),
+        );
       } catch (e) {
         print('proxyHttpRequest error $e');
         try {
@@ -306,5 +330,5 @@ var corsDefaultHeaders = [
   'Connection',
   'Content-length',
   'Host',
-  'User-Agent'
+  'User-Agent',
 ];

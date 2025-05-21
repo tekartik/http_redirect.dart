@@ -11,8 +11,9 @@ Future<HttpServer> serve(HttpServerFactory factory, int port) async {
       request.response.headers.add('header1', header1);
     }
 
-    request.response.headers.contentType =
-        ContentType.parse(httpContentTypeText);
+    request.response.headers.contentType = ContentType.parse(
+      httpContentTypeText,
+    );
     var body = request.uri.queryParameters['body'];
 
     if (statusCode != null) {
@@ -21,7 +22,7 @@ Future<HttpServer> serve(HttpServerFactory factory, int port) async {
     if (body != null) {
       request.response.write(body);
     } else {
-// needed for node
+      // needed for node
       request.response.write('');
     }
 

@@ -16,6 +16,12 @@ class FsResponse extends CvFirestoreDocumentBase with WithServerTimestampMixin {
   final error = CvModelField<CvResponseError>('error');
   final headers = CvField<Map>('headers');
   @override
-  List<CvField> get fields =>
-      [...timedMixinFields, statusCode, body, url, error, headers];
+  List<CvField> get fields => [
+    ...timedMixinFields,
+    statusCode,
+    body,
+    url,
+    error,
+    headers,
+  ];
 }

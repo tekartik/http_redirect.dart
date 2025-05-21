@@ -13,9 +13,9 @@ CvDocumentReference<CvFirestoreDocumentBase> redirectorRootRef(String path) =>
 /// `<root>/request/`
 ///
 /// Requests
-CvCollectionReference<FsRequest> requestsRef(String path) =>
-    redirectorRootRef(path)
-        .collection<FsRequest>(firestoreHttpContextRequestsPartName);
+CvCollectionReference<FsRequest> requestsRef(String path) => redirectorRootRef(
+  path,
+).collection<FsRequest>(firestoreHttpContextRequestsPartName);
 
 /// `<root>/request/<requestId>`
 ///
@@ -27,8 +27,9 @@ CvDocumentReference<FsRequest> requestRef(String path, String id) =>
 ///
 /// Responses
 CvCollectionReference<FsResponse> responsesRef(String path) =>
-    redirectorRootRef(path)
-        .collection<FsResponse>(firestoreHttpContextResponsesPartName);
+    redirectorRootRef(
+      path,
+    ).collection<FsResponse>(firestoreHttpContextResponsesPartName);
 
 /// `<root>/response/<requestId>`
 ///

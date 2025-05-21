@@ -11,10 +11,11 @@ void main() {
   var path = 'test/http_redirect_firestore';
   group('firestore', () {
     var redirector = RedirectorService(
-        Redirector('test', 'http://localhost:8501'),
-        firestore: firestore,
-        httpClientFactory: httpFactoryMemory.client,
-        path: path);
+      Redirector('test', 'http://localhost:8501'),
+      firestore: firestore,
+      httpClientFactory: httpFactoryMemory.client,
+      path: path,
+    );
     setUpAll(() async {
       await redirector.start();
     });
@@ -22,8 +23,11 @@ void main() {
       redirector.stop();
     });
     runHttpRedirectTest(
-        httpFactory: httpFactoryMemory,
-        outboundHttpClientFactory:
-            newHttpClientFactoryToFirestore(firestore: firestore, path: path));
+      httpFactory: httpFactoryMemory,
+      outboundHttpClientFactory: newHttpClientFactoryToFirestore(
+        firestore: firestore,
+        path: path,
+      ),
+    );
   });
 }

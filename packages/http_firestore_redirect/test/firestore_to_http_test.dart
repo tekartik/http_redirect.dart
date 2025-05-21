@@ -19,10 +19,11 @@ void main() {
   run(httpFactory: httpFactory, firestore: firestore);
 }
 
-void run(
-    {required Firestore firestore,
-    required HttpFactory httpFactory,
-    String path = 'test/tekartik_http'}) {
+void run({
+  required Firestore firestore,
+  required HttpFactory httpFactory,
+  String path = 'test/tekartik_http',
+}) {
   final httpClientFactory = httpFactory.client;
   final httpServerFactory = httpFactory.server;
 
@@ -55,10 +56,12 @@ void run(
 
     test('no data', () async {
       var redirector = Redirector('test', httpServerGetUri(server).toString());
-      redirectorService = RedirectorService(redirector,
-          firestore: firestore,
-          path: path,
-          httpClientFactory: httpClientFactory);
+      redirectorService = RedirectorService(
+        redirector,
+        firestore: firestore,
+        path: path,
+        httpClientFactory: httpClientFactory,
+      );
       await redirectorService.start();
       var uri = httpServerGetUri(server);
 
@@ -100,10 +103,12 @@ void run(
 
     test('full data', () async {
       var redirector = Redirector('test', httpServerGetUri(server).toString());
-      redirectorService = RedirectorService(redirector,
-          firestore: firestore,
-          path: path,
-          httpClientFactory: httpClientFactory);
+      redirectorService = RedirectorService(
+        redirector,
+        firestore: firestore,
+        path: path,
+        httpClientFactory: httpClientFactory,
+      );
       await redirectorService.start();
       var uri = httpServerGetUri(server);
 
@@ -111,14 +116,20 @@ void run(
       var id = AutoIdGenerator.autoId();
       var reqRef = requestRef(path, id);
       var respRef = responseRef(path, id);
-      var fsRequest = reqRef.cv()
-        ..url.v = uri.replace(queryParameters: {
-          'body': 'test',
-          'header1': 'value1',
-          'statusCode': '203'
-        }).toString()
-        ..method.v = httpMethodPost
-        ..headers.v = {'x-sample': 'value'};
+      var fsRequest =
+          reqRef.cv()
+            ..url.v =
+                uri
+                    .replace(
+                      queryParameters: {
+                        'body': 'test',
+                        'header1': 'value1',
+                        'statusCode': '203',
+                      },
+                    )
+                    .toString()
+            ..method.v = httpMethodPost
+            ..headers.v = {'x-sample': 'value'};
       var requestMap = fsRequest.toMapWithServerTimestamp();
       await reqRef.setMap(firestore, requestMap);
 

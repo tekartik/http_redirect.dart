@@ -4,15 +4,15 @@ publish_to: none
 deploy_to: none
 
 environment:
-  sdk: ^3.5.0
+  sdk: ^3.7.0
 
 dependencies:
-  process_run: '>=0.10.0'
-  path:
+  process_run: ">=1.2.1+1"
+  path: ">=1.9.0"
 dev_dependencies:
-  test: '>=1.0.0'
-  dev_build: '>=0.13.4-dev.1'
-  lints: '>=2.0.0'
+  test: ">=1.24.0"
+  dev_build: ">=1.1.2"
+  lints: ">=5.0.0"
 
 resolution: workspace
 #  tekartik_build_utils:

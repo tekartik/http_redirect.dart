@@ -18,10 +18,11 @@ void main() {
   run(httpFactory: httpFactory, firestore: firestore);
 }
 
-void run(
-    {required Firestore firestore,
-    required HttpFactory httpFactory,
-    String path = 'test/tekartik_http'}) {
+void run({
+  required Firestore firestore,
+  required HttpFactory httpFactory,
+  String path = 'test/tekartik_http',
+}) {
   final httpClientFactory = httpFactory.client;
   final httpServerFactory = httpFactory.server;
 
@@ -49,16 +50,19 @@ void run(
       var uri = httpServerGetUri(server);
 
       await deleteCollection(firestore, firestore.collection(requestPath));
-      final fbHttpClientFactory =
-          newHttpClientFactoryToFirestore(path: testPath, firestore: firestore);
+      final fbHttpClientFactory = newHttpClientFactoryToFirestore(
+        path: testPath,
+        firestore: firestore,
+      );
       //var response = await client.get('http://localhost:8181/?statusCode=200');
       // devPrint(uri);
       //var response = await client.get('${uri}/?statusCode=200');
       var client = fbHttpClientFactory.newClient();
 
       var completer = Completer<void>();
-      var subscription =
-          firestore.collection(requestPath).onSnapshot().listen((snapshot) {
+      var subscription = firestore.collection(requestPath).onSnapshot().listen((
+        snapshot,
+      ) {
         if (snapshot.docs.isNotEmpty) {
           if (!completer.isCompleted) {
             var rawRequest = snapshot.docs.first;
@@ -100,16 +104,19 @@ void run(
       var uri = httpServerGetUri(server);
 
       await deleteCollection(firestore, firestore.collection(requestPath));
-      final fbHttpClientFactory =
-          newHttpClientFactoryToFirestore(path: testPath, firestore: firestore);
+      final fbHttpClientFactory = newHttpClientFactoryToFirestore(
+        path: testPath,
+        firestore: firestore,
+      );
       //var response = await client.get('http://localhost:8181/?statusCode=200');
       // devPrint(uri);
       //var response = await client.get('${uri}/?statusCode=200');
       var client = fbHttpClientFactory.newClient();
 
       var completer = Completer<void>();
-      var subscription =
-          firestore.collection(requestPath).onSnapshot().listen((snapshot) {
+      var subscription = firestore.collection(requestPath).onSnapshot().listen((
+        snapshot,
+      ) {
         if (snapshot.docs.isNotEmpty) {
           if (!completer.isCompleted) {
             var rawRequest = snapshot.docs.first;
@@ -130,10 +137,11 @@ void run(
             /// Basic answer
             var ref = responseRef(path, id);
 
-            var reponse = ref.cv()
-              ..statusCode.v = 200
-              ..body.v = Blob.fromList([1, 2, 3])
-              ..headers.v = {'x-sample': 'from firestore'};
+            var reponse =
+                ref.cv()
+                  ..statusCode.v = 200
+                  ..body.v = Blob.fromList([1, 2, 3])
+                  ..headers.v = {'x-sample': 'from firestore'};
             var responseMap = reponse.toMapWithServerTimestamp();
             ref.setMap(firestore, responseMap);
             completer.complete();
@@ -141,8 +149,13 @@ void run(
         }
       });
       // ignore: unused_local_variable
-      var futureResponse = httpClientSend(client, httpMethodGet, uri,
-          headers: {'x-sample': 'value'}, body: 'test');
+      var futureResponse = httpClientSend(
+        client,
+        httpMethodGet,
+        uri,
+        headers: {'x-sample': 'value'},
+        body: 'test',
+      );
 
       var response = await futureResponse;
       expect(response.bodyBytes, [1, 2, 3]);

@@ -13,7 +13,9 @@ const String redirectHelpKey = 'x-tekartik-redirect-help';
 const String redirectForwardKeyPrefix = 'x-tekartik-forward-';
 
 Map<String, String> redirectClientConvertRequestHeaders(
-    Map<String, String> headers, List<String> forwarderHeaders) {
+  Map<String, String> headers,
+  List<String> forwarderHeaders,
+) {
   Map<String, String>? convertedHeaders;
   headers.forEach((String name, String value) {
     name = name.toLowerCase();

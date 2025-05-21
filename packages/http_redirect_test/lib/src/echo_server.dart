@@ -11,8 +11,9 @@ Future<HttpServer> serveEchoParams(HttpServerFactory factory, int port) async {
   server.listen((request) async {
     var statusCode = parseInt(request.uri.queryParameters['statusCode']);
 
-    request.response.headers.contentType =
-        ContentType.parse(httpContentTypeText);
+    request.response.headers.contentType = ContentType.parse(
+      httpContentTypeText,
+    );
     dynamic body = request.uri.queryParameters['body'];
     if (body == null) {
       try {
@@ -36,7 +37,7 @@ Future<HttpServer> serveEchoParams(HttpServerFactory factory, int port) async {
         request.response.add(body as Uint8List);
       }
     } else {
-// needed for node
+      // needed for node
       request.response.write('');
     }
 

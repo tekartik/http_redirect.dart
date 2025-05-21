@@ -16,144 +16,171 @@ void run({required Firestore firestore, required HttpFactory httpFactory}) {
   final httpClientFactory = httpFactory.client;
   final httpServerFactory = httpFactory.server;
 
-  group(
-    'firestore_to_http_redirector',
-    () {
-      late HttpServer server;
-      late Client client;
-      setUpAll(() async {
-        server = await serve(httpServerFactory, 0);
-        client = httpClientFactory.newClient();
-      });
-      tearDownAll(() async {
-        client.close();
-        await server.close();
-      });
-      test('httpServerGetUri', () async {
-        var uri = httpServerGetUri(server);
-        // expect(uri.toString().startsWith('http://_memory:'), isTrue);
-        expect(uri.toString().startsWith('http://'), isTrue);
-      });
+  group('firestore_to_http_redirector', () {
+    late HttpServer server;
+    late Client client;
+    setUpAll(() async {
+      server = await serve(httpServerFactory, 0);
+      client = httpClientFactory.newClient();
+    });
+    tearDownAll(() async {
+      client.close();
+      await server.close();
+    });
+    test('httpServerGetUri', () async {
+      var uri = httpServerGetUri(server);
+      // expect(uri.toString().startsWith('http://_memory:'), isTrue);
+      expect(uri.toString().startsWith('http://'), isTrue);
+    });
 
-      test('defaultStatusCode', () async {
-        var uri = httpServerGetUri(server);
-        //var response = await client.get('http://localhost:8181/?statusCode=200');
-        // devPrint(uri);
-        //var response = await client.get('${uri}/?statusCode=200');
+    test('defaultStatusCode', () async {
+      var uri = httpServerGetUri(server);
+      //var response = await client.get('http://localhost:8181/?statusCode=200');
+      // devPrint(uri);
+      //var response = await client.get('${uri}/?statusCode=200');
 
-        var response = await httpClientSend(
-            client, httpMethodGet, Uri.parse('$uri?statusCode=none'));
-        expect(response.isSuccessful, isTrue);
-
-        expect(response.statusCode, 200);
-        //expect(response.toString(), startsWith('HTTP 200'));
-        expect(response.toString(), startsWith('HTTP 200'));
-      });
-      test(
-        'success',
-        () async {
-          var uri = httpServerGetUri(server);
-          //var response = await client.get('http://localhost:8181/?statusCode=200');
-          // devPrint(uri);
-          //var response = await client.get('${uri}/?statusCode=200');
-
-          var response = await httpClientSend(
-              client, httpMethodGet, Uri.parse('$uri?statusCode=200'));
-          expect(response.isSuccessful, isTrue);
-
-          expect(response.toString().startsWith('HTTP 200 size 0 headers '),
-              isTrue); // 0');
-        },
+      var response = await httpClientSend(
+        client,
+        httpMethodGet,
+        Uri.parse('$uri?statusCode=none'),
       );
+      expect(response.isSuccessful, isTrue);
 
-      test(
-        'failure',
-        () async {
-          var uri = httpServerGetUri(server);
-          var response = await httpClientSend(
-              client, httpMethodGet, Uri.parse('$uri?statusCode=400'));
-          expect(response.isSuccessful, isFalse);
-          expect(response.statusCode, 400);
-        },
+      expect(response.statusCode, 200);
+      //expect(response.toString(), startsWith('HTTP 200'));
+      expect(response.toString(), startsWith('HTTP 200'));
+    });
+    test('success', () async {
+      var uri = httpServerGetUri(server);
+      //var response = await client.get('http://localhost:8181/?statusCode=200');
+      // devPrint(uri);
+      //var response = await client.get('${uri}/?statusCode=200');
+
+      var response = await httpClientSend(
+        client,
+        httpMethodGet,
+        Uri.parse('$uri?statusCode=200'),
       );
+      expect(response.isSuccessful, isTrue);
 
-      test(
-        'failure_throw',
-        () async {
-          var uri = httpServerGetUri(server);
-          try {
-            await httpClientSend(client, httpMethodGet,
-                Uri.parse('$uri?statusCode=400&body=test'),
-                throwOnFailure: true);
-            fail('should fail');
-          } on HttpClientException catch (e) {
-            expect(e.statusCode, 400);
-            expect(e.response.statusCode, 400);
-            expect(e.response.body, 'test');
-          }
-        },
+      expect(
+        response.toString().startsWith('HTTP 200 size 0 headers '),
+        isTrue,
+      ); // 0');
+    });
+
+    test('failure', () async {
+      var uri = httpServerGetUri(server);
+      var response = await httpClientSend(
+        client,
+        httpMethodGet,
+        Uri.parse('$uri?statusCode=400'),
       );
+      expect(response.isSuccessful, isFalse);
+      expect(response.statusCode, 400);
+    });
 
-      test('port', () async {
-        var server1 =
-            await httpServerFactory.bind(InternetAddress.any, httpPortAny);
-        var port1 = server1.port;
-        var server2 =
-            await httpServerFactory.bind(InternetAddress.any, httpPortAny);
-        var port2 = server2.port;
-        expect(port1, isNot(port2));
-      });
+    test('failure_throw', () async {
+      var uri = httpServerGetUri(server);
+      try {
+        await httpClientSend(
+          client,
+          httpMethodGet,
+          Uri.parse('$uri?statusCode=400&body=test'),
+          throwOnFailure: true,
+        );
+        fail('should fail');
+      } on HttpClientException catch (e) {
+        expect(e.statusCode, 400);
+        expect(e.response.statusCode, 400);
+        expect(e.response.body, 'test');
+      }
+    });
 
-      test('httpClientRead1', () async {
-        var uri = httpServerGetUri(server);
-        var result = await httpClientRead(
-            client, httpMethodGet, Uri.parse('$uri?statusCode=200&body=test'));
-        expect(result, 'test');
-      });
+    test('port', () async {
+      var server1 = await httpServerFactory.bind(
+        InternetAddress.any,
+        httpPortAny,
+      );
+      var port1 = server1.port;
+      var server2 = await httpServerFactory.bind(
+        InternetAddress.any,
+        httpPortAny,
+      );
+      var port2 = server2.port;
+      expect(port1, isNot(port2));
+    });
 
-      test('httpClientRead2', () async {
-        var uri = httpServerGetUri(server);
-        try {
-          await httpClientRead(client, httpMethodGet,
-              Uri.parse('$uri?statusCode=400&body=test'));
-          fail('should fail');
-        } on HttpClientException catch (e) {
-          expect(e.statusCode, 400);
-          expect(e.response.statusCode, 400);
-          expect(e.response.body, 'test');
-        }
-      });
+    test('httpClientRead1', () async {
+      var uri = httpServerGetUri(server);
+      var result = await httpClientRead(
+        client,
+        httpMethodGet,
+        Uri.parse('$uri?statusCode=200&body=test'),
+      );
+      expect(result, 'test');
+    });
 
-      test('httpClientReadEncoding', () async {
-        var uri = httpServerGetUri(server);
-        var body = Uri.encodeComponent('é');
-        var bytes = await httpClientReadBytes(
-            client, httpMethodGet, Uri.parse('$uri?body=$body'));
-        expect(bytes, [195, 169]);
-        try {
-          expect(
-              await httpClientRead(
-                  client, httpMethodGet, Uri.parse('$uri?body=$body')),
-              'Ã©');
-        } catch (_) {
-          // failing on io...
-          expect(
-              await httpClientRead(
-                  client, httpMethodGet, Uri.parse('$uri?body=$body')),
-              'é');
-        }
+    test('httpClientRead2', () async {
+      var uri = httpServerGetUri(server);
+      try {
+        await httpClientRead(
+          client,
+          httpMethodGet,
+          Uri.parse('$uri?statusCode=400&body=test'),
+        );
+        fail('should fail');
+      } on HttpClientException catch (e) {
+        expect(e.statusCode, 400);
+        expect(e.response.statusCode, 400);
+        expect(e.response.body, 'test');
+      }
+    });
+
+    test('httpClientReadEncoding', () async {
+      var uri = httpServerGetUri(server);
+      var body = Uri.encodeComponent('é');
+      var bytes = await httpClientReadBytes(
+        client,
+        httpMethodGet,
+        Uri.parse('$uri?body=$body'),
+      );
+      expect(bytes, [195, 169]);
+      try {
         expect(
-            await httpClientRead(
-                client, httpMethodGet, Uri.parse('$uri?body=$body'),
-                responseEncoding: utf8),
-            'é');
-      });
-      tearDownAll(() async {
-        client.close();
-        await server.close();
-      });
-    },
-  );
+          await httpClientRead(
+            client,
+            httpMethodGet,
+            Uri.parse('$uri?body=$body'),
+          ),
+          'Ã©',
+        );
+      } catch (_) {
+        // failing on io...
+        expect(
+          await httpClientRead(
+            client,
+            httpMethodGet,
+            Uri.parse('$uri?body=$body'),
+          ),
+          'é',
+        );
+      }
+      expect(
+        await httpClientRead(
+          client,
+          httpMethodGet,
+          Uri.parse('$uri?body=$body'),
+          responseEncoding: utf8,
+        ),
+        'é',
+      );
+    });
+    tearDownAll(() async {
+      client.close();
+      await server.close();
+    });
+  });
 
   group('server_request_fragment', () {
     test('fragment', () async {
@@ -164,7 +191,8 @@ void run({required Firestore firestore, required HttpFactory httpFactory}) {
       });
       var client = httpClientFactory.newClient();
       var response = await client.get(
-          Uri.parse('${httpServerGetUri(server)}/some_path#some_fragment'));
+        Uri.parse('${httpServerGetUri(server)}/some_path#some_fragment'),
+      );
       expect(response.body, '');
       expect(response.statusCode, 200);
       client.close();
@@ -181,8 +209,10 @@ void run({required Firestore firestore, required HttpFactory httpFactory}) {
         await request.response.close();
       });
       var client = httpClientFactory.newClient();
-      var response = await client.post(Uri.parse('${httpServerGetUri(server)}'),
-          body: Uint8List.fromList([1, 2, 3]));
+      var response = await client.post(
+        Uri.parse('${httpServerGetUri(server)}'),
+        body: Uint8List.fromList([1, 2, 3]),
+      );
       expect(response.bodyBytes, [1, 2, 3]);
       expect(response.statusCode, 200);
       client.close();
@@ -203,10 +233,13 @@ void run({required Firestore firestore, required HttpFactory httpFactory}) {
         await request.response.close();
       });
       var client = httpClientFactory.newClient();
-      var response = await httpClientSend(client, httpMethodGet,
-          httpServerGetUri(server), // 'http://127.0.0.1:${server.port}',
-          //var response = await client.get('http://127.0.0.1:${server.port}',
-          headers: <String, String>{'x-test': 'test_value'});
+      var response = await httpClientSend(
+        client,
+        httpMethodGet,
+        httpServerGetUri(server), // 'http://127.0.0.1:${server.port}',
+        //var response = await client.get('http://127.0.0.1:${server.port}',
+        headers: <String, String>{'x-test': 'test_value'},
+      );
       expect(response.statusCode, 200);
       expect(response.headers.value('x-test'), 'test_value');
       expect(response.headers.value('X-Test'), 'test_value');
@@ -228,11 +261,13 @@ void run({required Firestore firestore, required HttpFactory httpFactory}) {
 
       server.listen((request) async {
         final body = await utf8.decoder.bind(request).join();
-        request.response.headers.contentType =
-            ContentType.parse(httpContentTypeText);
+        request.response.headers.contentType = ContentType.parse(
+          httpContentTypeText,
+        );
         request.response.headers.set('X-Foo', 'bar');
-        request.response.headers.set(
-            'set-cookie', ['JSESSIONID=verylongid; Path=/somepath; HttpOnly']);
+        request.response.headers.set('set-cookie', [
+          'JSESSIONID=verylongid; Path=/somepath; HttpOnly',
+        ]);
         request.response.statusCode = 200;
         // devPrint('body ${body} ${body.length}');
         if (body.isNotEmpty) {
@@ -257,8 +292,10 @@ void run({required Firestore firestore, required HttpFactory httpFactory}) {
       expect(response.contentLength, greaterThan(0));
       expect(response.body, equals('ok'));
       expect(response.headers, contains('content-type'));
-      expect(response.headers['set-cookie'],
-          'JSESSIONID=verylongid; Path=/somepath; HttpOnly');
+      expect(
+        response.headers['set-cookie'],
+        'JSESSIONID=verylongid; Path=/somepath; HttpOnly',
+      );
       client.close();
     });
 
@@ -279,8 +316,10 @@ void run({required Firestore firestore, required HttpFactory httpFactory}) {
       expect(response.contentLength, greaterThan(0));
       expect(response.body, equals('ok'));
       expect(response.headers, contains('content-type'));
-      expect(response.headers['set-cookie'],
-          'JSESSIONID=verylongid; Path=/somepath; HttpOnly');
+      expect(
+        response.headers['set-cookie'],
+        'JSESSIONID=verylongid; Path=/somepath; HttpOnly',
+      );
       client.close();
     });
   });
@@ -294,8 +333,10 @@ void run({required Firestore firestore, required HttpFactory httpFactory}) {
           ..close();
       });
       var client = httpClientFactory.newClient();
-      expect(await client.read(Uri.parse('http://$localhost:${server.port}')),
-          'test\n');
+      expect(
+        await client.read(Uri.parse('http://$localhost:${server.port}')),
+        'test\n',
+      );
       client.close();
       await server.close();
     });
@@ -308,8 +349,10 @@ void run({required Firestore firestore, required HttpFactory httpFactory}) {
           ..close();
       });
       var client = httpClientFactory.newClient();
-      expect(await client.read(Uri.parse('http://$localhost:${server.port}')),
-          'test,true,1');
+      expect(
+        await client.read(Uri.parse('http://$localhost:${server.port}')),
+        'test,true,1',
+      );
       client.close();
       await server.close();
     });
@@ -323,8 +366,10 @@ void run({required Firestore firestore, required HttpFactory httpFactory}) {
           ..close();
       });
       var client = httpClientFactory.newClient();
-      expect(await client.read(Uri.parse('http://$localhost:${server.port}')),
-          'é');
+      expect(
+        await client.read(Uri.parse('http://$localhost:${server.port}')),
+        'é',
+      );
       client.close();
       await server.close();
     }, skip: true);
