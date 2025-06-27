@@ -48,11 +48,10 @@ void runHttpRedirectTest({
       httpRedirectServer = await HttpRedirectServer.startServer(
         httpClientFactory: outboundHttpClientFactory,
         httpServerFactory: httpServerFactory,
-        options:
-            Options()
-              ..host = localhost
-              ..port = 0
-              ..baseUrl = uri.toString(),
+        options: Options()
+          ..host = localhost
+          ..port = 0
+          ..baseUrl = uri.toString(),
       );
       redirectUri = httpServerGetUri(httpRedirectServer.httpServer);
       clientUri = overridenClientUri ?? redirectUri;
@@ -448,11 +447,10 @@ void run({
       var httpRedirectServer = await HttpRedirectServer.startServer(
         httpClientFactory: testServerHttpFactory?.client ?? clientFactory,
         httpServerFactory: serverFactory,
-        options:
-            Options()
-              ..host = localhost
-              ..port = 0
-              ..baseUrl = 'http://$localhost:$port',
+        options: Options()
+          ..host = localhost
+          ..port = 0
+          ..baseUrl = 'http://$localhost:$port',
       );
 
       var client = clientFactory.newClient();

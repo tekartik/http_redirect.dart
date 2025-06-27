@@ -36,11 +36,10 @@ void run({
       var httpRedirectServer = await HttpRedirectServer.startServer(
         httpClientFactory: finalServerClientFactory,
         httpServerFactory: serverFactory,
-        options:
-            Options()
-              ..host = localhost
-              ..port = 0
-              ..baseUrl = finalUri.toString(),
+        options: Options()
+          ..host = localhost
+          ..port = 0
+          ..baseUrl = finalUri.toString(),
       );
 
       var client = clientFactory.newClient();
@@ -71,11 +70,10 @@ void run({
       var httpRedirectServer = await HttpRedirectServer.startServer(
         httpClientFactory: finalServerClientFactory,
         httpServerFactory: serverFactory,
-        options:
-            Options()
-              ..host = localhost
-              ..port = 0
-              ..baseUrl = uri.toString(),
+        options: Options()
+          ..host = localhost
+          ..port = 0
+          ..baseUrl = uri.toString(),
       );
 
       var redirectServerUri = httpServerGetUri(httpRedirectServer.httpServer);
@@ -111,11 +109,10 @@ void run({
       var httpRedirectServer = await HttpRedirectServer.startServer(
         httpClientFactory: finalServerClientFactory,
         httpServerFactory: serverFactory,
-        options:
-            Options()
-              ..host = localhost
-              ..port = 0
-              ..baseUrl = uri.toString(),
+        options: Options()
+          ..host = localhost
+          ..port = 0
+          ..baseUrl = uri.toString(),
       );
 
       var redirectServerUri = httpServerGetUri(httpRedirectServer.httpServer);

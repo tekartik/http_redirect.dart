@@ -29,14 +29,13 @@ class RedirectClientUsingHeaders extends BaseClient {
 
   /// Returns a copy of [original] with the given [body].
   StreamedRequest _copyRequest(BaseRequest original, Stream<List<int>> body) {
-    final request =
-        StreamedRequest(original.method, redirectServerUri)
-          ..contentLength = original.contentLength
-          ..followRedirects = original.followRedirects
-          ..headers.addAll(original.headers)
-          ..headers.addAll({redirectUrlHeader: original.url.toString()})
-          ..maxRedirects = original.maxRedirects
-          ..persistentConnection = original.persistentConnection;
+    final request = StreamedRequest(original.method, redirectServerUri)
+      ..contentLength = original.contentLength
+      ..followRedirects = original.followRedirects
+      ..headers.addAll(original.headers)
+      ..headers.addAll({redirectUrlHeader: original.url.toString()})
+      ..maxRedirects = original.maxRedirects
+      ..persistentConnection = original.persistentConnection;
 
     body.listen(
       request.sink.add,
@@ -92,9 +91,8 @@ class RedirectClient extends BaseClient {
         StreamedRequest(
             original.method,
             redirectServerUri.replace(
-              queryParameters:
-                  <String, dynamic>{}
-                    ..addAll(redirectServerUri.queryParameters),
+              queryParameters: <String, dynamic>{}
+                ..addAll(redirectServerUri.queryParameters),
             ),
           )
           // needed, maybe add an use query param option in the future

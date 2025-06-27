@@ -51,10 +51,9 @@ Future proxyHttpRequest(
     var requestUri = request.uri; //
     // Fix arguments
     uri = uri.replace(
-      queryParameters:
-          <String, Object?>{}
-            ..addAll(uri.queryParameters)
-            ..addAll(requestUri.queryParameters),
+      queryParameters: <String, Object?>{}
+        ..addAll(uri.queryParameters)
+        ..addAll(requestUri.queryParameters),
     );
     // uri.queryParameters
   }
@@ -227,13 +226,12 @@ class Options {
   late List<String> _lowerCaseCorsHeaders;
   String? _corsHeadersText;
 
-  String get corsHeadersText =>
-      _corsHeadersText ??= () {
-        if (_corsHeaders == null) {
-          corsHeaders = corsDefaultHeaders;
-        }
-        return corsHeaders.join(',');
-      }();
+  String get corsHeadersText => _corsHeadersText ??= () {
+    if (_corsHeaders == null) {
+      corsHeaders = corsDefaultHeaders;
+    }
+    return corsHeaders.join(',');
+  }();
 }
 
 ///

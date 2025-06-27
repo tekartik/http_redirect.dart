@@ -116,20 +116,18 @@ void run({
       var id = AutoIdGenerator.autoId();
       var reqRef = requestRef(path, id);
       var respRef = responseRef(path, id);
-      var fsRequest =
-          reqRef.cv()
-            ..url.v =
-                uri
-                    .replace(
-                      queryParameters: {
-                        'body': 'test',
-                        'header1': 'value1',
-                        'statusCode': '203',
-                      },
-                    )
-                    .toString()
-            ..method.v = httpMethodPost
-            ..headers.v = {'x-sample': 'value'};
+      var fsRequest = reqRef.cv()
+        ..url.v = uri
+            .replace(
+              queryParameters: {
+                'body': 'test',
+                'header1': 'value1',
+                'statusCode': '203',
+              },
+            )
+            .toString()
+        ..method.v = httpMethodPost
+        ..headers.v = {'x-sample': 'value'};
       var requestMap = fsRequest.toMapWithServerTimestamp();
       await reqRef.setMap(firestore, requestMap);
 
