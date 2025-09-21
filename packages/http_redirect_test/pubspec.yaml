@@ -12,19 +12,16 @@ dependencies:
     git:
       url: https://github.com/tekartik/http_redirect.dart
       path: packages/http_redirect
-      ref: dart3a
     version: '>=0.0.1'
   tekartik_app_http:
     git:
       url: https://github.com/tekartik/app_common_utils.dart
-      ref: dart3a
       path: app_http
     version: '>=0.1.0'
   tekartik_http_test:
     git:
       url: https://github.com/tekartik/http.dart
       path: http_test
-      ref: dart3a
     version: '>=0.5.0'
   http:
   path: ">=1.9.0"

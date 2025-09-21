@@ -15,24 +15,20 @@ dependencies:
     git:
       url: https://github.com/tekartik/http_redirect.dart
       path: packages/http_redirect
-      ref: dart3a
     version: '>=0.0.1'
   tekartik_firebase_firestore_sembast:
     git:
       url: https://github.com/tekartik/firebase_firestore.dart
       path: firestore_sembast
-      ref: dart3a
     version: '>=0.8.0'
   tekartik_app_http:
     git:
       url: https://github.com/tekartik/app_common_utils.dart
-      ref: dart3a
       path: app_http
     version: '>=0.1.0'
   tekartik_app_cv_firestore:
     git:
       url: https://github.com/tekartik/app_common_utils.dart
-      ref: dart3a
       path: app_cv_firestore
     version: '>=0.1.0'
 dev_dependencies:
@@ -41,7 +37,6 @@ dev_dependencies:
     git:
       url: https://github.com/tekartik/http_redirect.dart
       path: packages/http_redirect_test
-      ref: dart3a
     version: '>=0.0.1'
 
 resolution: workspace

@@ -7,7 +7,6 @@ tekartik_http_firestore_redirect:
     git:
       url: https://github.com/tekartik/http_redirect.dart
       path: packages/http_firestore_redirect
-      ref: dart3a
     version: '>=0.0.1'
 ````
 
