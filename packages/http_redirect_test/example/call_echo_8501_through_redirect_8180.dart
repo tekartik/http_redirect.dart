@@ -1,4 +1,5 @@
 import 'package:http/http.dart';
+import 'package:process_run/stdio.dart';
 import 'package:tekartik_http_redirect/http_redirect_client.dart';
 
 // Run
@@ -8,13 +9,15 @@ import 'package:tekartik_http_redirect/http_redirect_client.dart';
 // curl http://localhost:8501
 Future<void> main() async {
   var client = Client();
-  print(await client.read(Uri.parse('http://localhost:8501?body=my_body')));
+  stdout.writeln(
+    await client.read(Uri.parse('http://localhost:8501?body=my_body')),
+  );
 
   var redirectClient = RedirectClient(
     client,
     redirectServerUri: Uri.parse('http://localhost:8180'),
   );
-  print(
+  stdout.writeln(
     await redirectClient.read(Uri.parse('http://localhost:8501?body=my_body')),
   );
 }

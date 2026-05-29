@@ -19,6 +19,7 @@ Future<HttpServer> serveEchoParams(HttpServerFactory factory, int port) async {
       try {
         body = await request.getBodyBytes();
       } catch (e) {
+        // ignore: avoid_print
         print('error reading body');
       }
     } else {
@@ -44,7 +45,9 @@ Future<HttpServer> serveEchoParams(HttpServerFactory factory, int port) async {
     await request.response.close();
   });
   var uri = httpServerGetUri(server);
+  // ignore: avoid_print
   print('simple body <$uri?body=test>');
+  // ignore: avoid_print
   print('Failed <$uri?body=test&statusCode=400>');
   return server;
 }

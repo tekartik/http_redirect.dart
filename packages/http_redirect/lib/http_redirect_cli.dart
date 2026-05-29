@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:args/args.dart';
 import 'package:tekartik_common_utils/int_utils.dart';
@@ -64,9 +65,11 @@ Future main(List<String> arguments) async {
 
   final help = argResults[helpArgName] as bool;
   if (help) {
-    print('http_proxy_exp [-p <port>] [-h <redirect_host:redirect_post>]');
-    print('');
-    print(parser.usage);
+    stdout.writeln(
+      'http_proxy_exp [-p <port>] [-h <redirect_host:redirect_post>]',
+    );
+    stdout.writeln();
+    stdout.writeln(parser.usage);
     return;
   }
   final logLevelText = argResults[logArgName] as String?;

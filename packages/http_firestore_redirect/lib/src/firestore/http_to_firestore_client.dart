@@ -158,6 +158,7 @@ class FirestoreHttpClient extends Object implements http.Client {
       await docReference.set(data);
 
       if (debugHttpToFirestore) {
+        // ignore: avoid_print
         print('[REQ] ${docReference.id} $data');
       }
       //devPrint("request ${docReference?.path} $data");
@@ -168,6 +169,7 @@ class FirestoreHttpClient extends Object implements http.Client {
 
       //devPrint("response ${responseReference?.path} $responseData");
       if (debugHttpToFirestore) {
+        // ignore: avoid_print
         print('[RESP] $responseData');
       }
       cancelResponseSuscription();

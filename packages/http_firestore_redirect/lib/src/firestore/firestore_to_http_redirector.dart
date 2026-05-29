@@ -105,7 +105,7 @@ class RedirectorService {
                 firestoreHttpContextResponsesPartName,
                 requestId,
               );
-              print('redirector request ${doc.ref.path} ${doc.data}');
+              // print('redirector request ${doc.ref.path} ${doc.data}');
 
               var httpClient = _httpClient ?? httpClientFactory.newClient();
               var data = doc.data;
@@ -141,7 +141,7 @@ class RedirectorService {
                 if (body is Map) {
                   body = json.encode(body);
                 }
-                print('url $url');
+                // print('url $url');
                 // headers ??= {};
                 //headers['Access-Control-Allow-Origin'] = "*";
 
@@ -186,6 +186,7 @@ class RedirectorService {
                     paramMessage: e.toString(),
                   };
                   if (isDebug) {
+                    // ignore: avoid_print
                     print(st);
                   }
                 }
@@ -199,7 +200,7 @@ class RedirectorService {
                 dataResponse[paramTimestamp] = FieldValue.serverTimestamp;
               }
 
-              print('redirector response $responsePath $dataResponse');
+              // print('redirector response $responsePath $dataResponse');
 
               listener?.info('response', dataResponse);
               await firestore.doc(responsePath).set(dataResponse);

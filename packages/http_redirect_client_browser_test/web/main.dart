@@ -26,8 +26,5 @@ Future<void> main() async {
       var client = Client();
       write(await client.read(Uri.parse('http://localhost:8501?body=my_body')));
     });
-    menu('sub', () {
-      item('print hi', () => print('hi'));
-    });
   });
 }
