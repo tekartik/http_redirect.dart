@@ -5,7 +5,6 @@ import 'package:tekartik_http_firestore_redirect/src/import.dart';
 import 'http_to_firestore_client.dart';
 
 /// /root_project
-///
 
 CvDocumentReference<CvFirestoreDocumentBase> redirectorRootRef(String path) =>
     CvDocumentReference<CvFirestoreDocumentBase>(path);
