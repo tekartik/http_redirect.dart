@@ -13,6 +13,92 @@ void _log(Object? object) {
   print(object);
 }
 
+/// Handle a request of a redirect server (not exported), [getClient] returns
+/// the client used to call the target.
+Future<void> redirectServerHandleRequest(
+  Options options,
+  HttpRequest request,
+  http.Client Function() getClient,
+) async {
+  _log('uri: ${request.uri} ${request.method}');
+  if (options.handleCors) {
+    //request.response.headers.set(HttpHeaders.CONTENT_TYPE, 'text/plain; charset=UTF-8');
+    request.response.headers.add(
+      'Access-Control-Allow-Methods',
+      'POST, OPTIONS, GET, PATCH, DELETE',
+    );
+    request.response.headers.add('Access-Control-Allow-Origin', '*');
+    request.response.headers.add(
+      'Access-Control-Allow-Headers',
+      // 'Origin,Content-Type,Authorization,Accept,connection,content-length,host,user-agent');
+      options.corsHeadersText,
+    );
+
+    if (request.method == 'OPTIONS') {
+      request.response
+        ..statusCode = 200
+        ..write('');
+      await request.response.close();
+      return;
+    }
+  }
+  var queryParameters = request.uri.queryParameters;
+  var baseUrl =
+      request.headers.value(redirectBaseUrlHeader) ??
+      queryParameters[redirectBaseUrlHeader] ??
+      // compat
+      request.headers.value('_tekartik_redirect_host') ??
+      options.baseUrl;
+
+  var fullUrl =
+      request.headers.value(redirectUrlHeader) ??
+      queryParameters[redirectUrlHeader];
+
+  // Handle help x-tekartik-redirect-help
+  if (queryParameters.length == 1 &&
+      queryParameters.keys.contains(redirectHelpKey)) {
+    request.response
+      ..statusCode = 200
+      ..write('?$redirectBaseUrlHeader=https://google.com');
+    await request.response.close();
+    return;
+  }
+  if (baseUrl == null && fullUrl == null) {
+    _log('server: no host port');
+    request.response
+      // 400 when allowed but no default base url either
+      ..statusCode = options.allowMissingRedirectHeader ? 400 : 405
+      ..write(
+        'missing $redirectBaseUrlHeader header or $redirectUrlHeader'
+        '${options.allowMissingRedirectHeader ? ' and no default base url' : ''}',
+      );
+    await request.response.flush();
+    await request.response.close();
+    return;
+  }
+  try {
+    await proxyHttpRequest(
+      options,
+      request,
+      baseUrl,
+      uri: fullUrl != null ? Uri.parse(fullUrl) : null,
+      client: getClient(),
+    );
+  } catch (e, st) {
+    _log('proxyHttpRequest error $e');
+    if (isDebug) {
+      _log(st);
+    }
+    try {
+      request.response
+        ..statusCode = 405
+        ..write('caught error $e');
+      await request.response.flush();
+      await request.response.close();
+    } catch (_) {}
+  }
+}
+
 class HttpRedirectServer {
   late final HttpClientFactory _httpClientFactory;
   late final HttpServerFactory _httpServerFactory;
@@ -70,87 +156,11 @@ class HttpRedirectServer {
       _log('default redirection to ${options.baseUrl}');
     }
     server.listen((request) async {
-      _log('uri: ${request.uri} ${request.method}');
-      if (options.handleCors) {
-        //request.response.headers.set(HttpHeaders.CONTENT_TYPE, 'text/plain; charset=UTF-8');
-        request.response.headers.add(
-          'Access-Control-Allow-Methods',
-          'POST, OPTIONS, GET, PATCH, DELETE',
-        );
-        request.response.headers.add('Access-Control-Allow-Origin', '*');
-        request.response.headers.add(
-          'Access-Control-Allow-Headers',
-          // 'Origin,Content-Type,Authorization,Accept,connection,content-length,host,user-agent');
-          options.corsHeadersText,
-        );
-
-        if (request.method == 'OPTIONS') {
-          request.response
-            ..statusCode = 200
-            ..write('');
-          await request.response.close();
-          return;
-        }
-      }
-      /*
-    var overridenRedirectHostPort =
-        parseHostPort(request.headers.value('_tekartik_redirect_host'));
-    var redirectHostPort = overridenRedirectHostPort ?? hostPort;
-    */
-      // compat
-      var baseUrl =
-          request.headers.value(redirectBaseUrlHeader) ??
-          request.uri.queryParameters[redirectBaseUrlHeader] ??
-          // compat
-          request.headers.value('_tekartik_redirect_host') ??
-          options.baseUrl;
-
-      var fullUrl = request.headers.value(redirectUrlHeader);
-
-      // Handle help x-tekartik-redirect-help
-      if (request.uri.queryParameters.length == 1 &&
-          request.uri.queryParameters.keys.contains(redirectHelpKey)) {
-        request.response
-          ..statusCode = 200
-          ..write('?$redirectBaseUrlHeader=https://google.com');
-        await request.response.close();
-        return;
-      }
-      if (baseUrl == null &&
-          fullUrl == null &&
-          !options.allowMissingRedirectHeader) {
-        _log('server: no host port');
-        request.response
-          ..statusCode = 405
-          ..write(
-            'missing $redirectBaseUrlHeader header or $redirectUrlHeader',
-          );
-        await request.response.flush();
-        await request.response.close();
-      } else {
-        client ??= _httpClientFactory.newClient();
-        try {
-          await proxyHttpRequest(
-            options,
-            request,
-            baseUrl,
-            uri: fullUrl != null ? Uri.parse(fullUrl) : null,
-            client: client!,
-          );
-        } catch (e, st) {
-          _log('proxyHttpRequest error $e');
-          if (isDebug) {
-            _log(st);
-          }
-          try {
-            request.response
-              ..statusCode = 405
-              ..write('caught error $e');
-            await request.response.flush();
-            await request.response.close();
-          } catch (_) {}
-        }
-      }
+      await redirectServerHandleRequest(
+        options,
+        request,
+        () => client ??= _httpClientFactory.newClient(),
+      );
     });
     return _httpServer = server;
   }

@@ -16,7 +16,7 @@ const String redirectBaseUrlArgName = 'host';
 const String forwardHeaderFlagName = 'forward-headers';
 const String forwardArgumentsFlagName = 'forward-arguments';
 
-Future main(List<String> arguments) async {
+Future<void> main(List<String> arguments) async {
   var parser = ArgParser(allowTrailingOptions: true);
   parser.addFlag(helpArgName, abbr: 'h', help: 'Usage help', negatable: false);
   parser.addFlag(corsArgName, abbr: 'c', help: 'Handle CORS', defaultsTo: true);

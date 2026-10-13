@@ -67,8 +67,6 @@ the CORS headers itself.
   `options.forwardedHeaders`, it forwards those header names verbatim: keep
   them plain on the client and do not also list them in
   `forwardedRequestHeaders`.
-* `RedirectClientUsingHeaders` exists in `lib/src/` but is not exported: use
-  `RedirectClient`.
 * Web tests: the `tekartik_http_redirect_client_browser_test` package of the
   same repo has a ready made browser menu calling an echo server through a
   proxy on `http://localhost:8180`.

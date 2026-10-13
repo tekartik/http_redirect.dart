@@ -14,6 +14,8 @@ class FsResponse extends CvFirestoreDocumentBase with WithServerTimestampMixin {
   final body = CvField<Blob>('body');
   final url = CvField<String>('url');
   final error = CvModelField<CvResponseError>('error');
+  // Raw map kept as is (any stored map type, fill and tests rely on it)
+  // ignore: strict_raw_type
   final headers = CvField<Map>('headers');
   @override
   List<CvField> get fields => [

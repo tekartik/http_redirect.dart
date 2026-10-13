@@ -108,7 +108,7 @@ class FirestoreHttpClient extends Object implements http.Client {
   }) => curl(Request(common.httpMethodPut, url, headers: headers, body: body));
 
   Future<ResponseFirestore> curl(Request request) async {
-    StreamSubscription? responseSubscription;
+    StreamSubscription<DocumentSnapshot>? responseSubscription;
 
     void cancelResponseSuscription() {
       responseSubscription?.cancel();
@@ -174,9 +174,18 @@ class FirestoreHttpClient extends Object implements http.Client {
       }
       cancelResponseSuscription();
 
+      var statusCode = responseData[paramStatusCode];
+      if (statusCode is! int) {
+        // The redirector could not reach the url
+        var error = responseData[paramError];
+        var message = error is Map ? error[paramMessage] : null;
+        throw http.ClientException(
+          message?.toString() ?? 'no response from the redirector',
+          request.url,
+        );
+      }
       var bodyBytes = (responseData[paramBody] as Blob?)?.data ?? Uint8List(0);
 
-      var statusCode = responseData[paramStatusCode] as int;
       var headers =
           (responseData[paramHeaders] as Map?)?.cast<String, String>() ??
           <String, String>{};

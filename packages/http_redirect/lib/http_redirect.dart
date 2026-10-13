@@ -25,7 +25,19 @@ void _log(Object? object) {
 }
 
 /// Proxy the HTTP request to the specified server.
-Future proxyHttpRequest(
+///
+/// The target is [uri] if set, otherwise the request path relative to
+/// [baseUrl]. Throws an [ArgumentError] if there is no target.
+///
+/// Request headers forwarded:
+/// - only the ones in [Options.forwardedHeaders] if set
+/// - otherwise, if [Options.forwardHeaders] is true (default), the CORS headers
+///   when [Options.handleCors] is true (default), all the headers otherwise
+/// - `x-tekartik-forward-<name>` headers are always forwarded as `<name>`.
+///
+/// The host and redirect headers are never forwarded, neither are the
+/// `x-tekartik-redirect-*` query parameters.
+Future<void> proxyHttpRequest(
   Options options,
   HttpRequest request,
   String? baseUrl, {
@@ -38,30 +50,35 @@ Future proxyHttpRequest(
       path = path.substring(1);
     }
 
+    if (baseUrl == null) {
+      // Never redirect to the redirect server itself
+      throw ArgumentError.value(
+        baseUrl,
+        'baseUrl',
+        'no redirect url (missing $redirectBaseUrlHeader or $redirectUrlHeader)',
+      );
+    }
     // print('baseUrl: $baseUrl, path: $path, headers: ${request.headers}');
-    String? url;
+    String url;
     if (path == '' || path == '.' || path == '/') {
       url = baseUrl;
     } else {
-      url = p.url.join(baseUrl!, path);
+      url = p.url.join(baseUrl, path);
       // print('baseUrl: $baseUrl, path: $path, url $url');
     }
-    if (url != null) {
-      uri = Uri.parse(url);
-    } else {
-      uri = request.requestedUri;
-    }
+    uri = Uri.parse(url);
   }
 
   if (options.forwardArguments) {
-    var requestUri = request.uri; //
-    // Fix arguments
-    uri = uri.replace(
-      queryParameters: <String, Object?>{}
-        ..addAll(uri.queryParameters)
-        ..addAll(requestUri.queryParameters),
-    );
-    // uri.queryParameters
+    // Fix arguments, the redirect parameters are not forwarded
+    var queryParameters = <String, List<String>>{
+      ...uri.queryParametersAll,
+      for (var entry in request.uri.queryParametersAll.entries)
+        if (!_isRedirectParameter(entry.key)) entry.key: entry.value,
+    };
+    if (queryParameters.isNotEmpty) {
+      uri = uri.replace(queryParameters: queryParameters);
+    }
   }
 
   if (debugHttpRedirectServer) {
@@ -93,23 +110,19 @@ Future proxyHttpRequest(
       headers[forwardedName] = values.join(',');
       return;
     }
-
+    // don't forward redirect urls
+    if (_isRedirectParameter(name) || name == '_tekartik_redirect_host') {
+      return;
+    }
+    if (!options.forwardHeaders) {
+      return;
+    }
     if (options.handleCors) {
-      // don't forward redirect url
-      if (name == redirectBaseUrlHeader) {
-        return;
-      }
-      // don't forward redirect url
-      if (name == redirectUrlHeader) {
-        return;
-      }
       if (options.containsHeader(name)) {
         setValues();
-        return;
       }
     } else {
-      // setValues();
-      return;
+      setValues();
     }
   });
   // print('headers: $headers');
@@ -198,8 +211,15 @@ Future proxyHttpRequest(
   // devPrint('done');
 }
 
+/// x-tekartik-redirect-* header or query parameter
+bool _isRedirectParameter(String name) =>
+    name.toLowerCase().startsWith('x-tekartik-redirect-');
+
 class Options {
   var handleCors = true;
+
+  /// Forward the request headers (the CORS headers when [handleCors] is true),
+  /// see [proxyHttpRequest].
   var forwardHeaders = true;
   var forwardArguments = true;
   int? port;
@@ -210,6 +230,9 @@ class Options {
   bool allowMissingRedirectHeader = false;
 
   bool containsHeader(String name) {
+    if (_corsHeaders == null) {
+      corsHeaders = corsDefaultHeaders;
+    }
     return _lowerCaseCorsHeaders.contains(name.toLowerCase());
   }
 
@@ -254,72 +277,13 @@ Future<HttpServer> startServer(
   if (options.baseUrl != null) {
     _log('default redirection to ${options.baseUrl}');
   }
+  http.Client? client;
   server.listen((request) async {
-    _log('uri: ${request.uri} ${request.method}');
-    if (options.handleCors) {
-      //request.response.headers.set(HttpHeaders.CONTENT_TYPE, 'text/plain; charset=UTF-8');
-      request.response.headers.add(
-        'Access-Control-Allow-Methods',
-        'POST, OPTIONS, GET, PATCH, DELETE',
-      );
-      request.response.headers.add('Access-Control-Allow-Origin', '*');
-      request.response.headers.add(
-        'Access-Control-Allow-Headers',
-        // 'Origin,Content-Type,Authorization,Accept,connection,content-length,host,user-agent');
-        options.corsHeadersText,
-      );
-
-      if (request.method == 'OPTIONS') {
-        request.response
-          ..statusCode = 200
-          ..write('');
-        await request.response.close();
-        return;
-      }
-    }
-    /*
-    var overridenRedirectHostPort =
-        parseHostPort(request.headers.value('_tekartik_redirect_host'));
-    var redirectHostPort = overridenRedirectHostPort ?? hostPort;
-    */
-    // compat
-    var baseUrl =
-        request.headers.value(redirectBaseUrlHeader) ??
-        // compat
-        request.headers.value('_tekartik_redirect_host') ??
-        options.baseUrl;
-
-    var fullUrl =
-        request.headers.value(redirectUrlHeader) ??
-        request.uri.queryParameters[redirectUrlHeader];
-
-    if (baseUrl == null && fullUrl == null) {
-      _log('no host port');
-      request.response
-        ..statusCode = 405
-        ..write('missing $redirectBaseUrlHeader header or $redirectUrlHeader');
-      await request.response.flush();
-      await request.response.close();
-    } else {
-      try {
-        await proxyHttpRequest(
-          options,
-          request,
-          baseUrl,
-          uri: fullUrl != null ? Uri.parse(fullUrl) : null,
-          client: http.Client(),
-        );
-      } catch (e) {
-        _log('proxyHttpRequest error $e');
-        try {
-          request.response
-            ..statusCode = 405
-            ..write('caught error $e');
-          await request.response.flush();
-          await request.response.close();
-        } catch (_) {}
-      }
-    }
+    await redirectServerHandleRequest(
+      options,
+      request,
+      () => client ??= http.Client(),
+    );
   });
   return server;
 }

@@ -45,7 +45,7 @@ class RedirectorService {
   final String path;
 
   Future<void> start() async {
-    if (requestsStreamSubscription == null) {
+    if (requestsStreamSubscription == null && paramSubscription == null) {
       //var path = this.path;
       //devPrint("handling in $path");
       // var firestore = await firestoreHttpContext.firestoreReady;
@@ -80,9 +80,12 @@ class RedirectorService {
   // final _lock = Lock();
   var _requestIds = <String>[];
 
-  Future _handleRequests(Firestore firestore, String path) async {
+  Future<void> _handleRequests(Firestore firestore, String path) async {
     listener?.info('listening', path);
     listener?.info('baseUrl', baseUrl);
+    // Called again on each parameter change, only one listener (cancel and
+    // listen without any await in between)
+    unawaited(requestsStreamSubscription?.cancel());
     requestsStreamSubscription = firestore.collection(path).onSnapshot().listen(
       (snapshot) async {
         //devPrint(snapshot.docs);
@@ -107,7 +110,7 @@ class RedirectorService {
               );
               // print('redirector request ${doc.ref.path} ${doc.data}');
 
-              var httpClient = _httpClient ?? httpClientFactory.newClient();
+              var httpClient = _httpClient ??= httpClientFactory.newClient();
               var data = doc.data;
               listener?.info('request', data);
               var method = data[paramMethod] as String? ?? httpMethodGet;
@@ -137,9 +140,12 @@ class RedirectorService {
 
                 Response? response;
 
-                dynamic body = data[paramBody];
+                var body = data[paramBody];
                 if (body is Map) {
                   body = json.encode(body);
+                } else if (body is Blob) {
+                  // Binary body from the client
+                  body = body.data;
                 }
                 // print('url $url');
                 // headers ??= {};
@@ -220,5 +226,6 @@ class RedirectorService {
     paramSubscription?.cancel();
     paramSubscription = null;
     _httpClient?.close();
+    _httpClient = null;
   }
 }

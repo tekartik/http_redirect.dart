@@ -52,14 +52,15 @@ abstractions, so it runs on `dart:io` (`httpFactoryIo`) or fully in memory
   `localhost`, `localhostIpV4`, `InternetAddress.anyIPv4` (the default when
   `host` is null). Default port is `8180`.
 * Target resolution, per request: full url from the `x-tekartik-redirect-url`
-  request header wins; otherwise the base url is the
+  request header (or query parameter) wins; otherwise the base url is the
   `x-tekartik-redirect-base-url` header, then the query parameter of the same
   name, then the legacy `_tekartik_redirect_host` header, then
   `options.baseUrl`, and the request path is joined to it. With no base url and
-  no full url the server answers `405` unless
-  `options.allowMissingRedirectHeader` is true.
+  no full url the server answers `405` (`400` when
+  `options.allowMissingRedirectHeader` is true, it never proxies to itself).
+  Upstream errors are answered `405` too.
 * `options.forwardArguments` (default true) merges the incoming query
-  parameters into the target uri.
+  parameters into the target uri, except the `x-tekartik-redirect-*` ones.
 * CORS (`options.handleCors`, default true): every response gets
   `Access-Control-Allow-Origin: *`, `Access-Control-Allow-Methods: POST,
   OPTIONS, GET, PATCH, DELETE` and `Access-Control-Allow-Headers:
@@ -68,11 +69,13 @@ abstractions, so it runs on `dart:io` (`httpFactoryIo`) or fully in memory
   (default `corsDefaultHeaders`; the two redirect headers are always appended).
 * Request headers sent to the target: `host` is never forwarded; any
   `x-tekartik-forward-<name>` header is forwarded as `<name>` (that is what the
-  client's `forwardedRequestHeaders` produces); with `handleCors` true only the
-  headers listed in `corsHeaders` are forwarded, and the two redirect headers
-  are dropped. Setting `options.forwardedHeaders = ['x-api-key']` switches to
-  an explicit allow list and takes precedence over everything else.
-  `Options.forwardHeaders` only backs the cli flag: the proxy never reads it.
+  client's `forwardedRequestHeaders` produces); the `x-tekartik-redirect-*`
+  headers are dropped. With `options.forwardHeaders` (default true, cli
+  `--[no-]forward-headers`) the other headers are forwarded: only the ones
+  listed in `corsHeaders` when `handleCors` is true, all of them otherwise;
+  with `forwardHeaders` false none are. Setting
+  `options.forwardedHeaders = ['x-api-key']` switches to an explicit allow list
+  and takes precedence over everything else.
 * Response: status code and headers are copied back except `content-length` and
   `content-encoding`, and `x-tekartik-redirect-url` is set to the resolved
   target url.
@@ -85,8 +88,7 @@ abstractions, so it runs on `dart:io` (`httpFactoryIo`) or fully in memory
 * Anti-patterns: the top level `startServer(factory, options)` is deprecated,
   use `HttpRedirectServer.startServer`; `debugHttpRedirectServer` is only
   reachable through `package:tekartik_http_redirect/src/http_redirect_server.dart`
-  (test code only); when calling `proxyHttpRequest` yourself, set
-  `options.corsHeaders` first (it is lazily initialized by `corsHeadersText`).
+  (test code only).
 * Testing: run the whole thing in memory with `httpFactoryMemory` from
   `package:tekartik_http/http_memory.dart`, or reuse the shared suite
   `runHttpRedirectTest(httpFactory: ...)` of the `tekartik_http_redirect_test`
