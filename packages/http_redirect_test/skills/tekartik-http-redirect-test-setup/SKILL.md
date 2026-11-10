@@ -52,11 +52,14 @@ suite of calls through the proxy. Point it at any `HttpFactory`
     server and provides the fallback client.
   * `testServerHttpFactory`: serve the echo target with another implementation
     (cross implementation run, e.g. memory proxy in front of an io server).
-  * `outboundHttpClientFactory`: the client factory the redirect server uses to
-    reach the target *and* the client the tests use; defaults to the target
-    factory's client. This is the hook for testing an exotic transport (for
-    instance the firestore backed client factory of
-    `tekartik_http_firestore_redirect`).
+  * `outboundHttpClientFactory`: when given, the client factory the redirect
+    server uses to reach the target *and* the client the tests use to call
+    the redirect server. This is the hook for testing an exotic transport
+    (for instance the firestore backed client factory of
+    `tekartik_http_firestore_redirect`). Without it, the redirect server uses
+    the target factory's client and the tests use `httpFactory`'s client, so
+    a `testServerHttpFactory` mix (memory proxy, io target or the reverse)
+    works.
   * `overridenClientUri`: call that uri instead of the started redirect server
     uri (an already running proxy on a fixed port).
 * `run({httpFactory, testServerHttpFactory})` is the older, smaller `redirect`

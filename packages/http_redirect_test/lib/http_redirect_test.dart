@@ -30,6 +30,11 @@ void runHttpRedirectTest({
   final httpServerFactory = httpFactory.server;
 
   var targetServerHttpFactory = testServerHttpFactory ?? httpFactory;
+  // The tests call the redirect server (served by httpFactory) with the
+  // explicit outbound client factory if any (a custom transport), with the
+  // client of httpFactory otherwise.
+  final testClientFactory = outboundHttpClientFactory ?? httpClientFactory;
+  // The redirect server calls the target server with this client.
   outboundHttpClientFactory ??= targetServerHttpFactory.client;
   group('http_redirect_test', () {
     late HttpServer server;
@@ -44,7 +49,7 @@ void runHttpRedirectTest({
       /*if (newClientFactory != null) {
           newClientFactory = newClientFactory();
         }*/
-      client = (outboundHttpClientFactory ?? httpClientFactory).newClient();
+      client = testClientFactory.newClient();
       httpRedirectServer = await HttpRedirectServer.startServer(
         httpClientFactory: outboundHttpClientFactory,
         httpServerFactory: httpServerFactory,

@@ -4,7 +4,7 @@ import 'package:tekartik_http_redirect/http_redirect_client.dart';
 
 // Run
 // - echo_server_8501.dart
-// - no_cors_header.dart
+// - cors_no_headers.dart
 // curl http://localhost:8180
 // curl http://localhost:8501
 Future<void> main() async {
