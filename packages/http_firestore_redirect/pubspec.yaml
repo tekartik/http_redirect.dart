@@ -8,7 +8,7 @@ environment:
   sdk: ^3.12.0
 
 dependencies:
-  http:
+  http: ">=1.1.0"
   path: ">=1.9.1"
   cv: ">=1.1.0+4"
   tekartik_http_redirect:
