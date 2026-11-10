@@ -59,7 +59,13 @@ class ResponseRequest extends http.BaseRequest {
   ResponseRequest(super.method, super.url);
 }
 
-class FirestoreHttpClient extends Object implements http.Client {
+/// A `package:http` client whose calls go through firestore: each request is
+/// written to `<path>/request/<id>`, the `RedirectorService` performs it and
+/// writes `<path>/response/<id>`, deleted once read.
+///
+/// Every `http.Client` method (`get`, `post`, `read`, `head`...) builds an
+/// `http.Request` and goes through [send], as for any [http.BaseClient].
+class FirestoreHttpClient extends http.BaseClient {
   final HttpClientFactoryFirestore httpContext;
 
   FirestoreHttpClient(this.httpContext);
@@ -69,44 +75,8 @@ class FirestoreHttpClient extends Object implements http.Client {
     return httpContext.firestoreReady;
   }
 
-  @override
-  Future<ResponseFirestore> get(Uri url, {Map<String, String>? headers}) =>
-      curl(Request(common.httpMethodGet, url, headers: headers));
-
-  @override
-  Future<ResponseFirestore> post(
-    Uri url, {
-    Map<String, String>? headers,
-    body,
-    Encoding? encoding,
-  }) => curl(Request(common.httpMethodPost, url, headers: headers, body: body));
-
-  @override
-  Future<ResponseFirestore> delete(
-    Uri url, {
-    Map<String, String>? headers,
-    body,
-    Encoding? encoding,
-  }) =>
-      curl(Request(common.httpMethodDelete, url, headers: headers, body: body));
-
-  @override
-  Future<ResponseFirestore> patch(
-    Uri url, {
-    Map<String, String>? headers,
-    body,
-    Encoding? encoding,
-  }) =>
-      curl(Request(common.httpMethodPatch, url, headers: headers, body: body));
-
-  @override
-  Future<ResponseFirestore> put(
-    Uri url, {
-    Map<String, String>? headers,
-    body,
-    Encoding? encoding,
-  }) => curl(Request(common.httpMethodPut, url, headers: headers, body: body));
-
+  /// Sends [request] through firestore and waits (30 seconds at most) for
+  /// the response document.
   Future<ResponseFirestore> curl(Request request) async {
     StreamSubscription<DocumentSnapshot>? responseSubscription;
 
@@ -173,6 +143,19 @@ class FirestoreHttpClient extends Object implements http.Client {
         print('[RESP] $responseData');
       }
       cancelResponseSuscription();
+      // The response document is only for this call (the redirector deletes
+      // the request): delete it, best effort, without delaying the call (a
+      // refused delete must not fail it).
+      unawaited(() async {
+        try {
+          await responseReference.delete();
+        } catch (e) {
+          if (debugHttpToFirestore) {
+            // ignore: avoid_print
+            print('[RESP] delete $responsePath failed: $e');
+          }
+        }
+      }());
 
       var statusCode = responseData[paramStatusCode];
       if (statusCode is! int) {
@@ -201,61 +184,28 @@ class FirestoreHttpClient extends Object implements http.Client {
     }
   }
 
-  @override
-  void close() {}
-
-  @override
-  Future<http.Response> head(url, {Map<String, String>? headers}) {
-    throw UnsupportedError('head');
-  }
-
-  @override
-  Future<String> read(url, {Map<String, String>? headers}) {
-    throw UnsupportedError('read');
-  }
-
-  @override
-  Future<Uint8List> readBytes(url, {Map<String, String>? headers}) {
-    throw UnsupportedError('readBytes');
-  }
-
+  /// Any request: [http.Request], [http.StreamedRequest],
+  /// [http.MultipartRequest]. Its body is read whole and sent as bytes with
+  /// the headers of the finalized request (a multipart request sets its
+  /// content type when finalized).
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
-    // Encoding? encoding;
-    Uint8List? bodyBytes;
-    if (request is http.Request) {
-      // encoding = request.encoding;
-      bodyBytes = request.bodyBytes;
-    } else if (request is http.MultipartRequest) {
-      throw UnsupportedError('multi part streamed requests is not supported');
-      /*
-      requestCopy = http.MultipartRequest(request.method, request.url)
-        ..fields.addAll(request.fields)
-        ..files.addAll(request.files);*/
-    } else if (request is http.StreamedRequest) {
-      throw UnsupportedError('copying streamed requests is not supported');
-    } else {
-      throw UnsupportedError('request type is unknown, cannot copy');
-    }
+    var bodyBytes = await request.finalize().toBytes();
     var headers = Map<String, String>.from(request.headers);
 
     var response = await curl(
       Request(request.method, request.url, headers: headers, body: bodyBytes),
     );
 
-    try {
-      return http.StreamedResponse(
-        http.ByteStream.fromBytes(response.bodyBytes),
-        response.statusCode,
-        contentLength: response.contentLength,
-        request: response.request,
-        headers: response.headers,
-        isRedirect: response.isRedirect,
-        persistentConnection: response.persistentConnection,
-        reasonPhrase: response.reasonPhrase,
-      );
-    } catch (_) {
-      rethrow;
-    }
+    return http.StreamedResponse(
+      http.ByteStream.fromBytes(response.bodyBytes),
+      response.statusCode,
+      contentLength: response.contentLength,
+      request: response.request,
+      headers: response.headers,
+      isRedirect: response.isRedirect,
+      persistentConnection: response.persistentConnection,
+      reasonPhrase: response.reasonPhrase,
+    );
   }
 }

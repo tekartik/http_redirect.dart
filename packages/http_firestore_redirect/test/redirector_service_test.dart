@@ -114,12 +114,42 @@ void main() {
       );
       expect(response.statusCode, 200);
       expect(response.body, 'POST <hello>');
-      // Sent as a string
+      // package:http post (bytes too, through send)
       expect(
         (await client.post(Uri.parse('p'), body: 'hello')).body,
         'POST <hello>',
       );
     });
+
+    test('request documents of older clients: string and map bodies', () async {
+      var path = 'redirector_service/older';
+      await startService(path, baseUrl: targetUri.toString());
+      // Older clients stored the raw body (a string, a map sent as json).
+      Future<String> call(Object body) async {
+        var id = AutoIdGenerator.autoId();
+        var responseRef = firestore.doc(url.join(path, 'response', id));
+        var completer = Completer<Map<String, Object?>>();
+        var subscription = responseRef.onSnapshot().listen((snapshot) {
+          if (snapshot.exists && !completer.isCompleted) {
+            completer.complete(snapshot.data);
+          }
+        });
+        try {
+          await firestore.doc(url.join(path, 'request', id)).set({
+            'url': 'p',
+            'method': httpMethodPost,
+            'body': body,
+          });
+          var data = await completer.future.timeout(const Duration(seconds: 5));
+          return utf8.decode((data['body'] as Blob).data);
+        } finally {
+          await subscription.cancel();
+        }
+      }
+
+      expect(await call('hello'), 'POST <hello>');
+      expect(await call({'a': 'b'}), 'POST <{"a":"b"}>');
+    }, timeout: const Timeout(Duration(seconds: 10)));
 
     test('unreachable url', () async {
       var deadServer = await serverFactory.bind(localhost, 0);

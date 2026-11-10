@@ -4,20 +4,30 @@ import 'package:path/path.dart' as p;
 import 'package:tekartik_http_firestore_redirect/src/firestore/http_to_firestore_client.dart';
 import 'package:tekartik_http_firestore_redirect/src/import.dart';
 
+/// Where a [RedirectorService] sends the calls.
 class Redirector {
-  // Find by name if any
+  /// A name, informational.
   final String name;
 
-  // otherwise use hostPort
+  /// The base url a relative request url is joined to; when null, the
+  /// `baseUrl` field of the document at the service path (followed).
   final String? baseUrl;
 
+  /// A redirector named [name] calling [baseUrl].
   Redirector(this.name, this.baseUrl);
 }
 
+/// Receives the steps of a [RedirectorService] (listening, request,
+/// response...), for logs.
 abstract class Listener {
+  /// A step [message] and its [data].
   void info(String message, Object? data);
 }
 
+/// Performs the http calls written in `<path>/request` with
+/// [httpClientFactory], writes each response in `<path>/response/<id>` and
+/// deletes the request. Run one service per [path], where the targets are
+/// reachable.
 class RedirectorService {
   final Firestore firestore;
   final Redirector redirector;
@@ -44,6 +54,7 @@ class RedirectorService {
 
   final String path;
 
+  /// Starts listening to the requests (does nothing when started).
   Future<void> start() async {
     if (requestsStreamSubscription == null && paramSubscription == null) {
       //var path = this.path;
@@ -152,41 +163,20 @@ class RedirectorService {
                 //headers['Access-Control-Allow-Origin'] = "*";
 
                 try {
-                  switch (method) {
-                    case httpMethodGet:
-                      response = await httpClient.get(
-                        Uri.parse(url),
-                        headers: headers,
-                      );
-                      break;
-                    case httpMethodPost:
-                      response = await httpClient.post(
-                        Uri.parse(url),
-                        headers: headers,
-                        body: body,
-                      );
-                      break;
-                    case httpMethodDelete:
-                      response = await httpClient.delete(
-                        Uri.parse(url),
-                        headers: headers,
-                      );
-                      break;
-                    case httpMethodPut:
-                      response = await httpClient.put(
-                        Uri.parse(url),
-                        headers: headers,
-                        body: body,
-                      );
-                      break;
-                    case httpMethodPatch:
-                      response = await httpClient.patch(
-                        Uri.parse(url),
-                        headers: headers,
-                        body: body,
-                      );
-                      break;
+                  // Any method (HEAD, OPTIONS... too), with its body
+                  // (DELETE too) and the headers of the caller (its
+                  // content type included).
+                  var request = http.Request(method, Uri.parse(url))
+                    ..headers.addAll(headers);
+                  if (body is String) {
+                    // Older clients: the raw body.
+                    request.body = body;
+                  } else if (body is List) {
+                    request.bodyBytes = body.cast<int>();
                   }
+                  response = await Response.fromStream(
+                    await httpClient.send(request),
+                  );
                 } catch (e, st) {
                   dataResponse[paramError] = <String, dynamic>{
                     paramMessage: e.toString(),
@@ -220,6 +210,7 @@ class RedirectorService {
     );
   }
 
+  /// Stops listening and closes the http client; can be started again.
   void stop() {
     requestsStreamSubscription?.cancel();
     requestsStreamSubscription = null;

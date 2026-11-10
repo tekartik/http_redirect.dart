@@ -37,7 +37,8 @@ to the proxy is verified end to end.
   `webdev serve` works too.
 * The page shows a text menu. `call_echo_8501` calls
   `http://localhost:8501?body=my_body` directly and is expected to fail with a
-  CORS error in the browser console (the echo server sends no CORS header);
+  CORS error in the browser console (the echo server sends no CORS header;
+  the menu shows `ClientException: Failed to fetch`);
   `call_echo_8501_through_redirect_8180` performs the same call through
   `RedirectClient` and must print `my_body`. That difference is the whole
   point of the app.

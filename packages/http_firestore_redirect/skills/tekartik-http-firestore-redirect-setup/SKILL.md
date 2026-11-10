@@ -5,8 +5,9 @@ description: >-
   tekartik_http_firestore_redirect: newHttpClientFactoryToFirestore(path,
   firestore) on the caller side, RedirectorService and Redirector on the
   network side, the `<path>/request/<id>` and `<path>/response/<id>` document
-  layout (url, method, headers, body Blob, statusCode, error, timestamp), and
-  the unsupported client methods (read, readBytes, head, multipart).
+  layout (url, method, headers, body Blob, statusCode, error, timestamp), who
+  deletes which document, timeouts and errors of a call, and the limits
+  (1 MiB documents, data in clear).
 ---
 
 # Http over firestore (tekartik_http_firestore_redirect)
@@ -40,31 +41,35 @@ existing code (an api client built on `tekartik_http`) keeps working.
     exposes `RedirectorService` and `Redirector`.
   Both sides must use the same `path` (a firestore document path such as
   `redirect/my_tunnel`) and the same firestore instance/project.
-* Caller: `factory.newClient()` returns a client supporting `get`, `post`,
-  `put`, `patch`, `delete` and `send`. `read`, `readBytes` and `head` throw
-  `UnsupportedError`, and `MultipartRequest` / `StreamedRequest` are refused:
-  go through `httpClientSend` / `httpClientRead` / `httpClientReadBytes` of
-  `tekartik_http` (they build on `send`) instead of `client.read(...)`.
-  `close()` is a no-op.
+* Caller: `factory.newClient()` returns an `http.BaseClient`: every method
+  works (`get`, `post`, `read`, `readBytes`, `head`, `send` of an
+  `http.Request`, `StreamedRequest` or `MultipartRequest`) and goes through
+  `send`, so a map body is form encoded and `encoding` is honoured as with
+  any client. The body is read whole (no streaming). `close()` is a no-op.
 * Each call writes `<path>/request/<autoId>` with `url`, `method`, `headers`
-  (map), `body` (a `Blob` when bytes, the raw value otherwise) and `timestamp`
+  (map, the content type included), `body` (a `Blob`) and `timestamp`
   (server timestamp), then listens on `<path>/response/<sameId>` and completes
-  when that document appears. It gives up after 30 seconds with a
-  `TimeoutException`, so the service must be running (and the firestore
-  `onSnapshot` streams must work) for any call to succeed.
+  when that document appears, then deletes it (best effort, not awaited: the
+  firestore rules must let the caller delete its responses, or they stay).
+  It gives up after 30 seconds with a `TimeoutException`, so the service must
+  be running (and the firestore `onSnapshot` streams must work) for any call
+  to succeed; the request document of a timed out call stays, and a service
+  started later still performs it.
 * Response document fields: `statusCode` (int), `body` (`Blob`), `headers`
   (map), `url`, `timestamp`, and `error` (`{message: ...}`) when the outgoing
-  call threw. A response with no `statusCode` makes the caller throw a cast
-  error, so always set it when writing a response by hand.
+  call threw. A response with no `statusCode` makes the caller throw an
+  `http.ClientException` with `error.message` (or "no response from the
+  redirector").
 * Service: `RedirectorService(Redirector(name, baseUrl), firestore: ...,
   path: ..., httpClientFactory: ...)` then `await start()` and `stop()` when
   done. `name` is informational. When `baseUrl` is a url, every request url is
   joined to it (an absolute request url wins); when `baseUrl` is null, the
   service watches the document at `path` and takes its `baseUrl` string field,
   so the target can be changed at runtime without restarting.
-* `start()` listens to the whole `<path>/request` collection, performs
-  `GET/POST/PUT/PATCH/DELETE` with the given `httpClientFactory` (use
-  `httpFactoryIo.client` for real network, `httpFactoryMemory.client` in
+* `start()` listens to the whole `<path>/request` collection, performs the
+  call (any method, with its headers and body; a string or map body written
+  by an older client is still accepted) with the given `httpClientFactory`
+  (use `httpFactoryIo.client` for real network, `httpFactoryMemory.client` in
   tests), writes the response document and then **deletes the request
   document**. It keeps the last request ids in memory to avoid answering
   twice. Run exactly one service per `path`.
@@ -74,6 +79,9 @@ existing code (an api client built on `tekartik_http`) keeps working.
 * Everything (url, headers, body) is stored in clear in firestore: never let a
   client that must not see other calls read the request/response collections,
   and prefer short lived tokens in forwarded headers.
+* Firestore limits a document to 1 MiB: a request or response body close to
+  that size cannot go through (a response write failing that way is not
+  caught by the service today).
 * The cv models (`FsRequest`, `FsResponse`, `CvResponseError`),
   `initFirestoreBuilders()` and the path helpers (`requestRef`, `responseRef`,
   `requestsRef`, `responsesRef`) are `lib/src/` only; the package's own tests
@@ -124,8 +132,11 @@ Future<String> readThroughFirestore(Firestore firestore, Uri uri) async {
     path: 'redirect/my_tunnel',
   );
   var client = factory.newClient();
-  // client.read() is unsupported: go through httpClientRead.
-  return await httpClientRead(client, httpMethodGet, uri);
+  try {
+    return await client.read(uri);
+  } finally {
+    client.close();
+  }
 }
 ```
 
