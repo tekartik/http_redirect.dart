@@ -16,6 +16,16 @@ void main() {
     );
   });
 
+  test('redirectClientConvertRequestHeaders case insensitive', () {
+    // The header name case does not matter, the original header is removed
+    expect(redirectClientConvertRequestHeaders({'X-Test': '1'}, ['x-test']), {
+      'x-tekartik-forward-x-test': '1',
+    });
+    expect(redirectClientConvertRequestHeaders({'x-test': '1'}, ['X-Test']), {
+      'x-tekartik-forward-x-test': '1',
+    });
+  });
+
   test('redirectServerConvertRequestHeaders', () {
     expect(
       redirectServerConvertRequestHeaders(HttpHeadersMemory()),

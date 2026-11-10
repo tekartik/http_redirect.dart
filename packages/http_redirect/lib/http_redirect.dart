@@ -1,3 +1,10 @@
+/// HTTP redirect (proxy) server adding CORS headers: [HttpRedirectServer]
+/// and its [Options].
+///
+/// The client going through it is in
+/// `package:tekartik_http_redirect/http_redirect_client.dart`.
+library;
+
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 import 'package:tekartik_common_utils/common_utils_import.dart';
@@ -215,18 +222,31 @@ Future<void> proxyHttpRequest(
 bool _isRedirectParameter(String name) =>
     name.toLowerCase().startsWith('x-tekartik-redirect-');
 
+/// Redirect server options.
 class Options {
+  /// Answer the CORS preflight (`OPTIONS`) and add the CORS headers to every
+  /// response (default true).
   var handleCors = true;
 
   /// Forward the request headers (the CORS headers when [handleCors] is true),
   /// see [proxyHttpRequest].
   var forwardHeaders = true;
+
+  /// Forward the query parameters of the request to the target, except the
+  /// `x-tekartik-redirect-*` ones (default true).
   var forwardArguments = true;
+
+  /// Port, default 8180, 0 for a free port.
   int? port;
+
+  /// Address to bind (`localhost`, an ip, `InternetAddress.anyIPv4`), default
+  /// `InternetAddress.anyIPv4` (every interface).
   Object? host;
 
+  /// When set, only these request headers are forwarded to the target.
   List<String>? forwardedHeaders;
 
+  /// Answer 400 instead of 405 when a request has no target.
   bool allowMissingRedirectHeader = false;
 
   bool containsHeader(String name) {
@@ -236,7 +256,8 @@ class Options {
     return _lowerCaseCorsHeaders.contains(name.toLowerCase());
   }
 
-  // The default url to redirect too
+  /// The default base url to redirect to, when the request has no
+  /// `x-tekartik-redirect-url` nor `x-tekartik-redirect-base-url`.
   String? baseUrl;
 
   set corsHeaders(List<String> corsHeaders) {
@@ -288,6 +309,7 @@ Future<HttpServer> startServer(
   return server;
 }
 
+/// The request headers forwarded (and allowed by CORS) by default.
 var corsDefaultHeaders = [
   'Origin',
   'Content-Type',

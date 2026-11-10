@@ -46,8 +46,8 @@ the CORS headers itself.
 * `forwardedRequestHeaders: ['x-test']` renames the listed request headers to
   `x-tekartik-forward-x-test` so a CORS-handling proxy unwraps them and sends
   them to the target. Without it, custom headers are dropped by the proxy
-  (only the headers of its `corsHeaders` list survive). Names are matched
-  lowercase.
+  (only the headers of its `corsHeaders` list survive). Names are case
+  insensitive (`['Authorization']` and `['authorization']` are the same).
 * `RedirectClientFactory(innerFactory, redirectServerUri: ...,
   forwardedRequestHeaders: ...)` implements `tekartik_http`'s
   `HttpClientFactory`: `newClient()` returns a `RedirectClient` wrapping

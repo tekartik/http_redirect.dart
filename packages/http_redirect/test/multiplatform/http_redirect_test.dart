@@ -143,5 +143,50 @@ void run({
       await httpRedirectServer.close();
       await httpServer.close();
     });
+
+    test('forwarded header names are case insensitive', () async {
+      var finalServerFactory = testServerHttpFactory?.server ?? serverFactory;
+      var httpServer = await finalServerFactory.bind(localhost, 0);
+      httpServer.listen((HttpRequest request) {
+        request.response
+          ..write('${request.headers.value('x-test')}')
+          ..close();
+      });
+      var uri = httpServerGetUri(httpServer);
+      var httpRedirectServer = await HttpRedirectServer.startServer(
+        httpClientFactory: finalServerClientFactory,
+        httpServerFactory: serverFactory,
+        options: Options()
+          ..host = localhost
+          ..port = 0
+          ..baseUrl = uri.toString(),
+      );
+      try {
+        for (var names in [
+          ['X-Test'],
+          ['x-test'],
+        ]) {
+          var client = RedirectClientFactory(
+            clientFactory,
+            redirectServerUri: httpServerGetUri(httpRedirectServer.httpServer),
+            forwardedRequestHeaders: names,
+          ).newClient();
+          try {
+            for (var header in ['x-test', 'X-Test']) {
+              expect(
+                await client.read(uri, headers: {header: '1234'}),
+                '1234',
+                reason: '$names $header',
+              );
+            }
+          } finally {
+            client.close();
+          }
+        }
+      } finally {
+        await httpRedirectServer.close();
+        await httpServer.close();
+      }
+    }, timeout: const Timeout(Duration(seconds: 10)));
   });
 }

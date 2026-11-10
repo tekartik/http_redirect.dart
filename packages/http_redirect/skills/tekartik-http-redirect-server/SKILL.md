@@ -83,8 +83,14 @@ abstractions, so it runs on `dart:io` (`httpFactoryIo`) or fully in memory
   usage line instead of proxying.
 * Command line, no code needed:
   `dart run tekartik_http_redirect:http_redirect -p 8180 -b https://example.com`
-  (`-c/--cors`, `-o/--cors-headers`, `-l/--log`, `--[no-]forward-headers`,
-  `--[no-]forward-arguments`, `-h` for help).
+  (`--no-cors`, `-o/--cors-headers`, `--[no-]forward-headers`,
+  `--[no-]forward-arguments`, `-h` for help; `-l/--log` changes nothing
+  visible). It always binds all the interfaces (`0.0.0.0`): an open proxy for
+  the whole network, which reaches the services the machine only exposes on
+  localhost. Use it on a trusted network, or start the server in code with
+  `host = localhost`.
+* The server prints every request (method and uri with its query parameters)
+  and the default redirection, even without debug.
 * Anti-patterns: the top level `startServer(factory, options)` is deprecated,
   use `HttpRedirectServer.startServer`; `debugHttpRedirectServer` is only
   reachable through `package:tekartik_http_redirect/src/http_redirect_server.dart`

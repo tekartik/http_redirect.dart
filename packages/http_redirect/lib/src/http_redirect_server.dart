@@ -99,6 +99,7 @@ Future<void> redirectServerHandleRequest(
   }
 }
 
+/// A running redirect server, see [startServer].
 class HttpRedirectServer {
   late final HttpClientFactory _httpClientFactory;
   late final HttpServerFactory _httpServerFactory;
@@ -122,6 +123,11 @@ class HttpRedirectServer {
 
   int get port => _httpServer!.port;
 
+  /// Starts a redirect server with [options] (host, port, default base url,
+  /// CORS).
+  ///
+  /// Give [httpFactory], or both [httpClientFactory] (calls to the target)
+  /// and [httpServerFactory].
   static Future<HttpRedirectServer> startServer({
     HttpFactory? httpFactory,
     HttpClientFactory? httpClientFactory,
@@ -165,6 +171,7 @@ class HttpRedirectServer {
     return _httpServer = server;
   }
 
+  /// Stops the server and closes its client.
   Future<void> close() async {
     var future = _httpServer?.close(force: true);
     client?.close();

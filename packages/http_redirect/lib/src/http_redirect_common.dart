@@ -12,17 +12,23 @@ const String redirectHelpKey = 'x-tekartik-redirect-help';
 /// Converted headers
 const String redirectForwardKeyPrefix = 'x-tekartik-forward-';
 
+/// Renames the [headers] named in [forwarderHeaders] with the
+/// `x-tekartik-forward-` prefix (lower case name), header names being case
+/// insensitive. Returns [headers] when none is renamed.
 Map<String, String> redirectClientConvertRequestHeaders(
   Map<String, String> headers,
   List<String> forwarderHeaders,
 ) {
+  var lowerCaseForwarderHeaders = forwarderHeaders
+      .map((name) => name.toLowerCase())
+      .toSet();
   Map<String, String>? convertedHeaders;
   headers.forEach((String name, String value) {
-    name = name.toLowerCase();
-    if (forwarderHeaders.contains(name)) {
+    var lowerCaseName = name.toLowerCase();
+    if (lowerCaseForwarderHeaders.contains(lowerCaseName)) {
       convertedHeaders ??= Map<String, String>.from(headers);
-      convertedHeaders!['$redirectForwardKeyPrefix$name'] = value;
       convertedHeaders!.remove(name);
+      convertedHeaders!['$redirectForwardKeyPrefix$lowerCaseName'] = value;
     }
   });
   return convertedHeaders ?? headers;
